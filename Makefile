@@ -15,8 +15,8 @@ default: $(MAIN_PROGRAM)
 $(MAIN_PROGRAM): $(SOURCES)
 	$(CC) $(SOURCES) -o $(OUTPUT_DIR)/$(MAIN_PROGRAM) $(CFLAGS) 
 
-debug: $(SOURCES) clean
+debug: $(SOURCES)
 	$(CC) $(SOURCES) -o $(OUTPUT_DIR)/$(MAIN_PROGRAM) $(CFLAGS_DEBUG)
 
 clean:
-	$(RM) $(MAIN_PROGRAM)
+	$(RM) $(OUTPUT_DIR)/*
