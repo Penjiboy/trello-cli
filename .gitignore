@@ -36,3 +36,7 @@ out/*
 
 # VSCode folder
 .vscode/*
+
+# Credentials
+.config/developer_api_key.txt
+.config/developer_api_token.txt
