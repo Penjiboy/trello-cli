@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 enum CommandResultCode
 {
@@ -22,7 +23,7 @@ class CommandExecutor
 public:
     CommandExecutor();
     ~CommandExecutor();
-    CommandResult *ParseExecute(const std::string &command);
+    std::shared_ptr<CommandResult> ParseExecute(const std::string &command);
 
 private:
     /* data */

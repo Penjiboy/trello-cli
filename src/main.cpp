@@ -6,6 +6,6 @@ int main(int argc, char *argv[])
     std::cout << "Hello Trello CLI!" << std::endl;
 
     CommandExecutor *executor = new CommandExecutor();
-    CommandResult *result = executor->ParseExecute("Hello executor");
+    std::shared_ptr<CommandResult> result = executor->ParseExecute("Hello executor");
     delete executor;
 }

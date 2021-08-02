@@ -10,7 +10,7 @@ CommandExecutor::~CommandExecutor()
 {
 }
 
-CommandResult *CommandExecutor::ParseExecute(const std::string &command)
+std::shared_ptr<CommandResult> CommandExecutor::ParseExecute(const std::string &command)
 {
     std::cout << "Parsing and Executing Command" << std::endl;
     return NULL;
