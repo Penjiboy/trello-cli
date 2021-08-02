@@ -8,6 +8,7 @@ struct CardLabel
 {
     std::string name;
     std::string id;
+    std::string color;
 };
 
 struct CardComment

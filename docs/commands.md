@@ -17,6 +17,7 @@
         * `get-all`
         * `due-dates`
         * `create-new` `{name}`
+        * `move-to-list` `{destination-list-name}`
         * `card-id` `{id}`
           * `get-description`
           * `edit-description` `{description}`
