@@ -4,8 +4,8 @@ CC 				= g++
 CFLAGS 			= -w 
 CFLAGS_DEBUG	= -g -w 
 
-SOURCES			= src/*.cpp src/control/*.cpp src/data/*.cpp
-INCLUDES		= src/*.h src/control/*.h src/data/*.h
+SOURCES			= src/*.cpp src/control/*.cpp src/data/*.cpp src/service/*.cpp
+INCLUDES		= src/*.h src/control/*.h src/data/*.h src/service/*.h
 MAIN_PROGRAM	= trello-cli
 
 OUTPUT_DIR		= out

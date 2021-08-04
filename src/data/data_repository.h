@@ -23,7 +23,7 @@ public:
     std::shared_ptr<std::vector<Card>> GetAllCards(const Board &board, const BoardList &list);
     std::shared_ptr<std::vector<tm>> GetListDueDates(const Board &board, const BoardList &list);
     std::shared_ptr<Card> CreateNewCard(const Board &board, const BoardList &list, const std::string &name);
-    std::shared_ptr<Card> MoveCardToList(const Board &board, const BoardList &originalList, const BoardList &destinationList);
+    std::shared_ptr<Card> MoveCardToList(const Board &board, const BoardList &originalList, const BoardList &destinationList, const Card &card);
 
     // Card Methods
     std::shared_ptr<std::string> GetCardDescription(const Board &board, const BoardList &list, const Card &card);
