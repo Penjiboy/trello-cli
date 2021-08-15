@@ -4,38 +4,37 @@
 #include <vector>
 #include <ctime>
 
-struct CardLabel
+struct BoardType
+{
+    std::string id;
+};
+struct CardLabel : public BoardType
 {
     std::string name;
-    std::string id;
     std::string color;
 };
 
-struct CardComment
+struct CardComment : public BoardType
 {
     std::string text;
     std::string commenterName;
-    std::string commentId;
     std::tm commentTime;
 };
 
-struct CardChecklistTask
+struct CardChecklistTask : public BoardType
 {
-    std::string id;
     std::string name;
     bool isComplete;
 };
 
-struct CardChecklist
+struct CardChecklist : public BoardType
 {
-    std::string id;
     std::string name;
     std::vector<CardChecklistTask> tasks;
 };
 
-struct Card
+struct Card : public BoardType
 {
-    std::string id;
     std::string name;
     std::string description;
     std::tm dueDate;
@@ -44,16 +43,14 @@ struct Card
     std::vector<CardChecklist> checklists;
 };
 
-struct BoardList
+struct BoardList : public BoardType
 {
-    std::string id;
     std::string name;
     std::vector<Card> cards;
 };
 
-struct Board
+struct Board : public BoardType
 {
-    std::string id;
     std::string name;
     std::string workspace;
     std::vector<CardLabel> labels;

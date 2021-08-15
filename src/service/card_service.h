@@ -34,16 +34,8 @@ public:
 private:
     CardService(/* args */);
 
-    static std::shared_ptr<CardService> s_Instance = NULL;
+    static std::shared_ptr<CardService> s_Instance;
     std::shared_ptr<Card> m_CurrentCard = NULL;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
     /* data */
 };
-
-CardService::CardService(/* args */)
-{
-}
-
-CardService::~CardService()
-{
-}

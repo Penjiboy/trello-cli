@@ -29,6 +29,6 @@ public:
 private:
     BoardService(/* args */);
 
-    static std::shared_ptr<BoardService> s_Instance = NULL;
+    static std::shared_ptr<BoardService> s_Instance;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
 };
