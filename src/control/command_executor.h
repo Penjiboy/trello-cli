@@ -16,10 +16,11 @@ enum CommandResultCode
     NotAuthorized = 3
 };
 
+template <typename T>
 struct CommandResult
 {
     CommandResultCode resultCode;
-    std::shared_ptr<std::vector<BoardType>> result;
+    std::shared_ptr<std::vector<T>> result;
     std::string resultString;
 };
 
@@ -28,40 +29,39 @@ class CommandExecutor
 public:
     CommandExecutor();
     ~CommandExecutor();
-    std::shared_ptr<CommandResult> ParseExecute(const std::string &command);
 
     // Board Methods
-    std::shared_ptr<CommandResult> GetAllBoards();
-    std::shared_ptr<CommandResult> CreateNewBoard(const std::string &name);
-    std::shared_ptr<CommandResult> GetBoardLabels(const Board &board);
-    std::shared_ptr<CommandResult> CreateBoardLabel(const Board &board, const std::string &name);
-    std::shared_ptr<CommandResult> GetAllBoardLists(const Board &board);
-    std::shared_ptr<CommandResult> CreateNewBoardList(const Board &board, const std::string &name);
+    std::shared_ptr<CommandResult<Board>> GetAllBoards();
+    std::shared_ptr<CommandResult<Board>> CreateNewBoard(const std::string &name);
+    std::shared_ptr<CommandResult<CardLabel>> GetBoardLabels(const Board &board);
+    std::shared_ptr<CommandResult<CardLabel>> CreateBoardLabel(const Board &board, const std::string &name);
+    std::shared_ptr<CommandResult<BoardList>> GetAllBoardLists(const Board &board);
+    std::shared_ptr<CommandResult<BoardList>> CreateNewBoardList(const Board &board, const std::string &name);
 
     // BoardList Methods
-    std::shared_ptr<CommandResult> GetListCardCount(const Board &board, const BoardList &list);
-    std::shared_ptr<CommandResult> GetAllCards(const Board &board, const BoardList &list);
-    std::shared_ptr<CommandResult> GetListDueDates(const Board &board, const BoardList &list);
-    std::shared_ptr<CommandResult> CreateNewCard(const Board &board, const BoardList &list, const std::string &name);
-    std::shared_ptr<CommandResult> MoveCardToList(const Board &board, const BoardList &originalList, const BoardList &destinationList, const Card &card);
+    std::shared_ptr<CommandResult<int>> GetListCardCount(const Board &board, const BoardList &list);
+    std::shared_ptr<CommandResult<Card>> GetAllCards(const Board &board, const BoardList &list);
+    std::shared_ptr<CommandResult<CardDueDate>> GetListDueDates(const Board &board, const BoardList &list);
+    std::shared_ptr<CommandResult<Card>> CreateNewCard(const Board &board, const BoardList &list, const std::string &name);
+    std::shared_ptr<CommandResult<Card>> MoveCardToList(const Board &board, const BoardList &originalList, const BoardList &destinationList, const Card &card);
 
     // Card Methods
-    std::shared_ptr<CommandResult> GetCardDescription(const Board &board, const BoardList &list, const Card &card);
-    std::shared_ptr<CommandResult> EditCardDescription(const Board &board, const BoardList &list, const Card &card, const std::string &description);
-    std::shared_ptr<CommandResult> GetCardChecklists(const Board &board, const BoardList &list, const Card &card);
-    std::shared_ptr<CommandResult> CreateCardChecklist(const Board &board, const BoardList &list, const Card &card, const std::string &checklistName);
-    std::shared_ptr<CommandResult> GetCardComments(const Board &board, const BoardList &list, const Card &card);
-    std::shared_ptr<CommandResult> AddCardComment(const Board &board, const BoardList &list, const Card &card, CardComment &comment);
-    std::shared_ptr<CommandResult> GetCardLabels(const Board &board, const BoardList &list, const Card &card);
-    std::shared_ptr<CommandResult> AddCardLabel(const Board &board, const BoardList &list, const Card &card, const CardLabel &label);
-    std::shared_ptr<CommandResult> RemoveCardLabel(const Board &board, const BoardList &list, const Card &card, const CardLabel &label);
-    std::shared_ptr<CommandResult> GetCardDueDate(const Board &board, const BoardList &list, const Card &card);
-    std::shared_ptr<CommandResult> SetCardDueDate(const Board &board, const BoardList &list, const Card &card, const std::tm &dueDate);
+    std::shared_ptr<CommandResult<std::string>> GetCardDescription(const Board &board, const BoardList &list, const Card &card);
+    std::shared_ptr<CommandResult<Card>> EditCardDescription(const Board &board, const BoardList &list, const Card &card, const std::string &description);
+    std::shared_ptr<CommandResult<CardChecklist>> GetCardChecklists(const Board &board, const BoardList &list, const Card &card);
+    std::shared_ptr<CommandResult<CardChecklist>> CreateCardChecklist(const Board &board, const BoardList &list, const Card &card, const std::string &checklistName);
+    std::shared_ptr<CommandResult<CardComment>> GetCardComments(const Board &board, const BoardList &list, const Card &card);
+    std::shared_ptr<CommandResult<CardComment>> AddCardComment(const Board &board, const BoardList &list, const Card &card, CardComment &comment);
+    std::shared_ptr<CommandResult<CardLabel>> GetCardLabels(const Board &board, const BoardList &list, const Card &card);
+    std::shared_ptr<CommandResult<CardLabel>> AddCardLabel(const Board &board, const BoardList &list, const Card &card, const CardLabel &label);
+    std::shared_ptr<CommandResult<Card>> RemoveCardLabel(const Board &board, const BoardList &list, const Card &card, const CardLabel &label);
+    std::shared_ptr<CommandResult<CardDueDate>> GetCardDueDate(const Board &board, const BoardList &list, const Card &card);
+    std::shared_ptr<CommandResult<CardDueDate>> SetCardDueDate(const Board &board, const BoardList &list, const Card &card, const std::tm &dueDate);
 
     // Checklist Methods
-    std::shared_ptr<CommandResult> GetChecklistTasks(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist);
-    std::shared_ptr<CommandResult> AddChecklistTask(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist, CardChecklistTask &task);
-    std::shared_ptr<CommandResult> CompleteChecklistTask(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist, CardChecklistTask &task);
+    std::shared_ptr<CommandResult<CardChecklistTask>> GetChecklistTasks(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist);
+    std::shared_ptr<CommandResult<CardChecklistTask>> AddChecklistTask(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist, CardChecklistTask &task);
+    std::shared_ptr<CommandResult<CardChecklistTask>> CompleteChecklistTask(const Board &board, const BoardList &list, const Card &card, const CardChecklist &checklist, CardChecklistTask &task);
 
 private:
     /* data */

@@ -6,7 +6,8 @@
 
 struct BoardType
 {
-    std::string id;
+    std::string trelloId;
+    std::string localId;
 };
 struct CardLabel : public BoardType
 {
@@ -41,6 +42,12 @@ struct Card : public BoardType
     std::vector<CardLabel> labels;
     std::vector<CardComment> comments;
     std::vector<CardChecklist> checklists;
+};
+
+struct CardDueDate
+{
+    Card card;
+    std::tm dueDate;
 };
 
 struct BoardList : public BoardType
