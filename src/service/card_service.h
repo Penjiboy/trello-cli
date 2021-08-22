@@ -10,7 +10,6 @@ class CardService
 {
 public:
     static std::shared_ptr<CardService> GetInstance();
-    ~CardService();
 
     void SetCurrentCard(const Card &card);
 
@@ -32,9 +31,8 @@ public:
     std::shared_ptr<CardChecklist> CompleteChecklistTask(const CardChecklist &checklist, CardChecklistTask &task);
 
 private:
-    CardService(/* args */);
+    CardService() {}
 
-    static std::shared_ptr<CardService> s_Instance;
     std::shared_ptr<Card> m_CurrentCard = NULL;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
     /* data */

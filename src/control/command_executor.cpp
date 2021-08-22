@@ -4,8 +4,8 @@
 
 CommandExecutor::CommandExecutor()
 {
-    // this->m_BoardService = BoardService::GetInstance();
-    // this->m_CardService = CardService::GetInstance();
+    this->m_BoardService = BoardService::GetInstance();
+    this->m_CardService = CardService::GetInstance();
 }
 
 CommandExecutor::~CommandExecutor()

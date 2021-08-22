@@ -8,7 +8,6 @@
 class BoardService
 {
 public:
-    ~BoardService();
     static std::shared_ptr<BoardService> GetInstance();
 
     std::shared_ptr<std::vector<const Board>> GetAllBoards();
@@ -27,8 +26,7 @@ public:
     void SetCurrentBoard(const Board &board);
 
 private:
-    BoardService(/* args */);
+    BoardService() {};
 
-    static std::shared_ptr<BoardService> s_Instance;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
 };
