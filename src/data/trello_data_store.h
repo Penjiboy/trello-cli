@@ -1,16 +1,18 @@
 #pragma once
 
-#include "data_repository.h"
+#include "generic_data_store.h"
 
 #include <string>
+#include <memory>
 
-class TrelloDataStore : public DataRepository
+class TrelloDataStore : public GenericDataStore
 {
 public:
-    TrelloDataStore(/* args */);
-    ~TrelloDataStore();
+    static std::shared_ptr<TrelloDataStore> GetInstance();
+    std::shared_ptr<const std::vector<Board>> GetAllBoards();
 
 private:
     /* data */
+    TrelloDataStore(/* args */) {}
     const std::string kUrlBase = "https://api.trello.com/1";
 };

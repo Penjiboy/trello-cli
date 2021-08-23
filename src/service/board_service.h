@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../data/board.h"
+#include "../data/data_repository.h"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -26,7 +28,7 @@ public:
     void SetCurrentBoard(const Board &board);
 
 private:
-    BoardService() {};
-
+    BoardService() { this->m_DataRepository = DataRepository::GetInstance(); };
+    std::shared_ptr<DataRepository> m_DataRepository;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
 };

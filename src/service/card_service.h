@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../data/board.h"
+#include "../data/data_repository.h"
 
 #include <string>
 #include <vector>
@@ -31,8 +32,8 @@ public:
     std::shared_ptr<const CardChecklist> CompleteChecklistTask(const CardChecklist &checklist, CardChecklistTask &task);
 
 private:
-    CardService() {}
-
+    CardService() { this->m_DataRepository = DataRepository::GetInstance(); };
+    std::shared_ptr<DataRepository> m_DataRepository;
     std::shared_ptr<Card> m_CurrentCard = NULL;
     std::shared_ptr<Board> m_CurrentBoard = NULL;
     /* data */
