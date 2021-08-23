@@ -20,7 +20,7 @@ template <typename T>
 struct CommandResult
 {
     CommandResultCode resultCode;
-    std::shared_ptr<std::vector<T>> result;
+    std::shared_ptr<const std::vector<T>> result;
     std::string resultString;
 };
 

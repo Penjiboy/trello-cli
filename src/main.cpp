@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    std::shared_ptr<std::vector<Board>> boards = boardsResult->result;
+    std::shared_ptr<const std::vector<Board>> boards = boardsResult->result;
     for (Board board : *boards)
     {
         std::cout << "Board ID: " << board.trelloId << std::endl;
