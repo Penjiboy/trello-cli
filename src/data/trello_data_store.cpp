@@ -2,7 +2,6 @@
 
 #include "trello_data_store.h"
 
-#include "httplib.h"
 
 #include <iostream>
 #include <fstream>
@@ -44,10 +43,12 @@ std::shared_ptr<TrelloDataStore> TrelloDataStore::GetInstance()
 std::shared_ptr<const std::vector<Board>> TrelloDataStore::GetAllBoards()
 {
     // Send HTTP Request
-    httplib::Client client("https://www.google.com");
-    // auto response = client.Get("/");
-    // std::cout << "Response Status: " << response->status << std::endl;
-    // std::cout << "Response Body: " << response->body << std::endl;
+    
+    std::string urlPath = "/1/members/me/boards?key=" + m_key + "&token=" + m_token;
+    httplib::Client client(kTrelloHost);
+    auto response = client.Get(urlPath.c_str());
+    std::cout << "Response Status: " << response->status << std::endl;
+    std::cout << "Response Body: " << response->body << std::endl;
 
     // Parse Response
 
