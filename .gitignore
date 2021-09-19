@@ -40,3 +40,7 @@ out/*
 # Credentials
 .config/developer_api_key.txt
 .config/developer_api_token.txt
+
+# Added by cargo
+
+/target
