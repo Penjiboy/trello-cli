@@ -38,7 +38,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let boards: Value = serde_json::from_str(&trello_response)?;
     println!("Boards: {:#?}", boards);
 
-    // Print the boards
+    // Print the specific board info
+    let first_board_name = boards[0]["name"].as_str().unwrap_or_default();
+    println!("First board name: {}", first_board_name);
 
     Ok(())
 }
