@@ -24,6 +24,10 @@ async fn main() {
     println!();
 
     let card_label = data::CardLabel {
+        id: data::ID {
+            trello_id: String::from("test"),
+            local_id: String::from("test"),
+        },
         name: String::from("Test"),
         color: String::from("Red"),
     };
