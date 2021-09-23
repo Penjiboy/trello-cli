@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::fs::File;
 use std::io::Read;
 
@@ -15,9 +18,9 @@ async fn main() {
     println!("Let's first try to get all the boards");
     println!();
 
-    let trello_result = test_trello_request().await;
-    assert_eq!(trello_result.is_ok(), true);
-    println!();
+    // let trello_result = test_trello_request().await;
+    // assert_eq!(trello_result.is_ok(), true);
+    // println!();
 
     let mongo_result = test_mongo_connection().await;
     assert_eq!(mongo_result.is_ok(), true);
