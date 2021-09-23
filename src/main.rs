@@ -5,17 +5,29 @@ use serde_json::{Value};
 use reqwest;
 use mongodb::{Client, options::ClientOptions };
 
+mod data;
+// use crate::data;
+
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
     println!("I guess we're doing things in rust now");
     println!("Let's first try to get all the boards");
+    println!();
 
     let trello_result = test_trello_request().await;
     assert_eq!(trello_result.is_ok(), true);
+    println!();
 
     let mongo_result = test_mongo_connection().await;
     assert_eq!(mongo_result.is_ok(), true);
+    println!();
+
+    let card_label = data::CardLabel {
+        name: String::from("Test"),
+        color: String::from("Red"),
+    };
+    println!("Card Label\nName:{name}\nColor:{color}", name=card_label.name, color=card_label.color);
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {
