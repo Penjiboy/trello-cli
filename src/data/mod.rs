@@ -4,12 +4,11 @@ pub mod data_repository;
 mod trello_data_store;
 
 pub struct ID {
-    pub trello_id: String,
-    pub local_id: String,
+    pub trello_id: Option<String>,
+    pub local_id: Option<String>,
 }
 
 pub struct CardLabel {
-    pub id: ID,
     pub name: String,
     pub color: String,
 }
@@ -51,6 +50,7 @@ pub struct CardDueDate {
 pub struct BoardList {
     pub id: ID,
     pub name: String,
+    pub board: Board,
     pub cards: Vec<Card>,
 }
 
@@ -58,5 +58,4 @@ pub struct Board {
     pub id: ID,
     pub name: String,
     pub labels: Vec<CardLabel>,
-    pub lists: Vec<BoardList>,
 }
