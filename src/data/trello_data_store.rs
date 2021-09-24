@@ -34,9 +34,7 @@ pub struct TrelloDataStore;
 
 #[async_trait]
 impl DataStore for TrelloDataStore {
-    fn init() {
-        println!("Key: {:?}\nToken: {:?}", *KEY, *TOKEN);
-    }
+    fn init() {}
 
     async fn get_all_boards() -> Result<Vec<Board>, Box<dyn std::error::Error>> {
         let url_path: String = format!(
@@ -51,13 +49,8 @@ impl DataStore for TrelloDataStore {
 
         let boards: Value = serde_json::from_str(&trello_response)?;
 
-        // Print the specific board info
-        let first_board_name = boards[0]["name"].as_str().unwrap_or_default();
-        println!("First board name: {}", first_board_name);
-
         let mut result: Vec<Board> = Vec::new();
         for board_json in boards.as_array().unwrap() {
-            // board_json["labelNames"].as_array().unwrap().map()
 
             let label_names_map: &Map<String, Value> = board_json["labelNames"].as_object().unwrap();
             let mut card_labels: Vec<CardLabel> = Vec::new();
