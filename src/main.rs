@@ -2,6 +2,9 @@
 extern crate lazy_static;
 
 use mongodb::{Client, options::ClientOptions };
+use structopt::StructOpt;
+
+use std::path::PathBuf;
 
 mod data;
 mod service;
@@ -10,12 +13,32 @@ use crate::service::board as BoardService;
 use crate::control::*;
 use crate::control::command_executor as CommandExecutor;
 
+#[derive(Debug, StructOpt)]
+struct CliArgs {
+    #[structopt(short, long)]
+    interactive: bool,
+
+    #[structopt(short = "t", long = "token", parse(from_os_str))]
+    token_file: Option<PathBuf>,
+
+    #[structopt(short = "k", long = "key", parse(from_os_str))]
+    key_file: Option<PathBuf>
+}
+
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
     println!("I guess we're doing things in rust now");
     println!("Let's first try to get all the boards");
     println!();
+
+    let args = CliArgs::from_args();
+    println!("{:?}", args);
+
+    if args.interactive {
+        // Do something
+        return
+    }
 
     // let mongo_result = test_mongo_connection().await;
     // assert_eq!(mongo_result.is_ok(), true);
