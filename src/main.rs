@@ -5,7 +5,10 @@ use mongodb::{Client, options::ClientOptions };
 
 mod data;
 mod service;
+mod control;
 use crate::service::board as BoardService;
+use crate::control::*;
+use crate::control::command_executor as CommandExecutor;
 
 #[tokio::main]
 async fn main() {
@@ -18,13 +21,19 @@ async fn main() {
     // assert_eq!(mongo_result.is_ok(), true);
     // println!();
 
-    BoardService::init();
-    let boards_result = BoardService::get_all_boards().await;
+    CommandExecutor::init();
+    let boards_result = CommandExecutor::get_all_boards().await;
 
     match boards_result {
-        Ok(boards) => {
-            println!("We got boards!");
-            println!("There are {} boards all together", boards.len());
+        Ok(command_result) => {
+            println!("{}", command_result.result_string.unwrap());
+            match command_result.result_code {
+                CommandResultCode::Success => {
+                    println!("There are {} boards all together", command_result.result.unwrap().len());
+                }
+
+                CommandResultCode::Failed => {}
+            };
         },
 
         Err(why) => println!("Failed to get all boards: {}", why),
