@@ -4,7 +4,8 @@ extern crate lazy_static;
 use mongodb::{Client, options::ClientOptions };
 
 mod data;
-use crate::data::data_repository::*;
+mod service;
+use crate::service::board as BoardService;
 
 #[tokio::main]
 async fn main() {
@@ -17,8 +18,8 @@ async fn main() {
     // assert_eq!(mongo_result.is_ok(), true);
     // println!();
 
-    DataRepository::init();
-    let boards_result = DataRepository::get_all_boards().await;
+    BoardService::init();
+    let boards_result = BoardService::get_all_boards().await;
 
     match boards_result {
         Ok(boards) => {
