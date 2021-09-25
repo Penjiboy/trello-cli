@@ -3,7 +3,7 @@
 * `board`
   * `get-all`
   * `create-new` `{name}` `{workspace}?`
-  * `board-id` `{id}`
+  * `select` `{name}`
     * `label`
       * `get-all`
       * `create-new` `{name}`
@@ -12,18 +12,18 @@
       * `get-all`
       * `create-new` `{name}`
       * `delete` `{list-id}`
-      * `list-id` `{id}`
+      * `select` `{name}`
         * `card-count`
         * `get-all`
         * `due-dates`
         * `create-new` `{name}`
         * `move-to-list` `{destination-list-name}`
-        * `card-id` `{id}`
+        * `select-card` `{name}`
           * `get-description`
           * `edit-description` `{description}`
           * `get-checklists`
           * `create-checklist` `{name}`
-          * `checklist-id` `{id}`
+          * `select-checklist` `{name}`
             * `get-tasks`
             * `add-task`
             * `complete-task` `{id}`

@@ -9,7 +9,6 @@ use std::path::PathBuf;
 mod data;
 mod service;
 mod control;
-use crate::service::board as BoardService;
 use crate::control::*;
 use crate::control::command_executor as CommandExecutor;
 

@@ -1,5 +1,7 @@
 use crate::service::board as BoardService;
 
+pub mod interactive_cli;
+
 pub enum CommandResultCode {
     Success,
     Failed,
