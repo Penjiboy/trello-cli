@@ -3,6 +3,7 @@ extern crate lazy_static;
 
 use mongodb::{Client, options::ClientOptions };
 use structopt::StructOpt;
+use tokio;
 
 use std::path::PathBuf;
 
@@ -26,16 +27,11 @@ struct CliArgs {
 
 #[tokio::main]
 async fn main() {
-    println!("Hello, world!");
-    println!("I guess we're doing things in rust now");
-    println!("Let's first try to get all the boards");
-    println!();
-
     let args = CliArgs::from_args();
-    println!("{:?}", args);
 
     if args.interactive {
         // Do something
+        control::interactive_cli::run().await;
         return
     }
 
@@ -45,21 +41,8 @@ async fn main() {
 
     CommandExecutor::init();
     let boards_result = CommandExecutor::get_all_boards().await;
+    // let boards_result = CommandExecutor::get_all_boards();
 
-    match boards_result {
-        Ok(command_result) => {
-            println!("{}", command_result.result_string.unwrap());
-            match command_result.result_code {
-                CommandResultCode::Success => {
-                    println!("There are {} boards all together", command_result.result.unwrap().len());
-                }
-
-                CommandResultCode::Failed => {}
-            };
-        },
-
-        Err(why) => println!("Failed to get all boards: {}", why),
-    };
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {
