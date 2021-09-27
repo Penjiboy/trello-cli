@@ -36,6 +36,39 @@ fn print_invalid_command(help: Option<String>) {
     println!("Invalid command. {}", help.unwrap_or(String::from("")));
 }
 
+async fn handle_board_command(mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+    match input_iter.next().unwrap_or("") {
+        "" => print_invalid_command(None),
+
+        "get-all" => {
+            let boards_result = CommandExecutor::get_all_boards().await;
+
+            match boards_result {
+                Ok(command_result) => {
+                    println!("{}", command_result.result_string.unwrap());
+                    match command_result.result_code {
+                        CommandResultCode::Success => {
+                            let boards: Vec<Board> = command_result.result.unwrap();
+                            println!("Board Names: ");
+                            for board in boards {
+                                println!("  - {}", board.name);
+                            }
+                        }
+
+                        CommandResultCode::Failed => {
+                            println!("Command Failed.")
+                        }
+                    };
+                }
+
+                Err(why) => println!("Failed to get all boards: {}", why),
+            };
+        }
+
+        _ => print_invalid_command(None),
+    }
+}
+
 pub async fn run() {
     let mut current_board: Option<Board> = None;
     let mut current_list: Option<BoardList> = None;
@@ -45,7 +78,12 @@ pub async fn run() {
     CommandExecutor::init();
 
     loop {
-        print_prompt(&current_board, &current_list, &current_card, &current_checklist);
+        print_prompt(
+            &current_board,
+            &current_list,
+            &current_card,
+            &current_checklist,
+        );
         let mut input = String::new();
         let read_result = io::stdin().read_line(&mut input);
         if read_result.is_err() {
@@ -64,35 +102,12 @@ pub async fn run() {
         let mut input_iter = input.split_ascii_whitespace();
         match input_iter.next().unwrap_or("") {
             "" => continue,
-            
+
             "board" => {
-                match input_iter.next().unwrap_or("") {
-                    "" => print_invalid_command(None),
-
-                    "get-all" => {
-                        let boards_result = CommandExecutor::get_all_boards().await;
-
-                        match boards_result {
-                            Ok(command_result) => {
-                                println!("{}", command_result.result_string.unwrap());
-                                match command_result.result_code {
-                                    CommandResultCode::Success => {
-                                        // println!("There are {} boards all together", command_result.result.unwrap().len());
-                                    }
-
-                                    CommandResultCode::Failed => { println!("Command Failed.") }
-                                };
-                            },
-
-                            Err(why) => println!("Failed to get all boards: {}", why),
-                        };
-                    }
-
-                    _ => print_invalid_command(None)
-                }    
+                handle_board_command(input_iter).await;
             }
 
-            _ => print_invalid_command(None)
+            _ => print_invalid_command(None),
         }
     }
 }
