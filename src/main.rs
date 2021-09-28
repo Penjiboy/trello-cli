@@ -10,8 +10,6 @@ use std::path::PathBuf;
 mod data;
 mod service;
 mod control;
-use crate::control::*;
-use crate::control::command_executor as CommandExecutor;
 
 #[derive(Debug, StructOpt)]
 struct CliArgs {
@@ -38,10 +36,6 @@ async fn main() {
     // let mongo_result = test_mongo_connection().await;
     // assert_eq!(mongo_result.is_ok(), true);
     // println!();
-
-    CommandExecutor::init();
-    let boards_result = CommandExecutor::get_all_boards().await;
-    // let boards_result = CommandExecutor::get_all_boards();
 
 }
 

@@ -1,71 +1,78 @@
-use crate::control::command_executor as CommandExecutor;
+use crate::control::command_executor::CommandExecutor;
 use crate::control::*;
 use crate::data::*;
 
 use std::io::{self, Write};
 
-fn print_prompt(
-    board: &Option<Board>,
-    list: &Option<BoardList>,
-    card: &Option<Card>,
-    checklist: &Option<CardChecklist>,
-) {
-    let mut path = String::from("");
-    if board.is_some() {
-        path.push_str(&board.as_ref().unwrap().name);
-        if list.is_some() {
-            path.push('/');
-            path.push_str(&list.as_ref().unwrap().name);
-            if card.is_some() {
+struct InteractiveCli {
+    command_exec: CommandExecutor,
+}
+
+impl InteractiveCli {
+    fn print_prompt(
+        &mut self,
+        board: &Option<Board>,
+        list: &Option<BoardList>,
+        card: &Option<Card>,
+        checklist: &Option<CardChecklist>,
+    ) {
+        let mut path = String::from("");
+        if board.is_some() {
+            path.push_str(&board.as_ref().unwrap().name);
+            if list.is_some() {
                 path.push('/');
-                path.push_str(&card.as_ref().unwrap().name);
-                if checklist.is_some() {
+                path.push_str(&list.as_ref().unwrap().name);
+                if card.is_some() {
                     path.push('/');
-                    path.push_str(&checklist.as_ref().unwrap().name);
+                    path.push_str(&card.as_ref().unwrap().name);
+                    if checklist.is_some() {
+                        path.push('/');
+                        path.push_str(&checklist.as_ref().unwrap().name);
+                    }
                 }
             }
         }
+
+        path.push('>');
+        print!("{}", path);
+        io::stdout().flush().unwrap();
     }
 
-    path.push('>');
-    print!("{}", path);
-    io::stdout().flush().unwrap();
-}
+    fn print_invalid_command(&mut self, help: Option<String>) {
+        println!("Invalid command. {}", help.unwrap_or(String::from("")));
+    }
 
-fn print_invalid_command(help: Option<String>) {
-    println!("Invalid command. {}", help.unwrap_or(String::from("")));
-}
+    async fn handle_board_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        match input_iter.next().unwrap_or("") {
+            "" => self.print_invalid_command(None),
 
-async fn handle_board_command(mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-    match input_iter.next().unwrap_or("") {
-        "" => print_invalid_command(None),
+            "get-all" => {
+                let boards_result = self.command_exec.get_all_boards().await;
 
-        "get-all" => {
-            let boards_result = CommandExecutor::get_all_boards().await;
-
-            match boards_result {
-                Ok(command_result) => {
-                    println!("{}", command_result.result_string.unwrap());
-                    match command_result.result_code {
-                        CommandResultCode::Success => {
-                            let boards: Vec<Board> = command_result.result.unwrap();
-                            println!("Board Names: ");
-                            for board in boards {
-                                println!("  - {}", board.name);
+                match boards_result {
+                    Ok(command_result) => {
+                        println!("{}", command_result.result_string.unwrap());
+                        match command_result.result_code {
+                            CommandResultCode::Success => {
+                                let boards: Vec<Board> = command_result.result.unwrap();
+                                println!("Board Names: ");
+                                for board in boards {
+                                    println!("  - {}", board.name);
+                                }
                             }
-                        }
 
-                        CommandResultCode::Failed => {
-                            println!("Command Failed.")
-                        }
-                    };
-                }
+                            CommandResultCode::Failed => {
+                                println!("Command Failed.")
+                            }
+                        };
+                    }
 
-                Err(why) => println!("Failed to get all boards: {}", why),
-            };
+                    Err(why) => println!("Failed to get all boards: {}", why),
+                };
+            }
+
+            _ => self.print_invalid_command(None),
         }
-
-        _ => print_invalid_command(None),
     }
 }
 
@@ -75,10 +82,13 @@ pub async fn run() {
     let mut current_card: Option<Card> = None;
     let mut current_checklist: Option<CardChecklist> = None;
 
-    CommandExecutor::init();
+    let command_exec = CommandExecutor::new();
+    let mut cli = InteractiveCli {
+        command_exec: command_exec
+    };
 
     loop {
-        print_prompt(
+        cli.print_prompt(
             &current_board,
             &current_list,
             &current_card,
@@ -104,10 +114,10 @@ pub async fn run() {
             "" => continue,
 
             "board" => {
-                handle_board_command(input_iter).await;
+                cli.handle_board_command(input_iter).await;
             }
 
-            _ => print_invalid_command(None),
+            _ => cli.print_invalid_command(None),
         }
     }
 }
