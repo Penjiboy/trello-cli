@@ -30,6 +30,7 @@ lazy_static! {
     };
 }
 
+#[derive(Clone)]
 pub struct TrelloDataStore {
     key: String,
     token: String,

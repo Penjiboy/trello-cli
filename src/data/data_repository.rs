@@ -5,27 +5,24 @@ use async_trait::async_trait;
 
 use std::sync::Once;
 
-static mut data_repo: Option<DataRepository> = None;
 static INIT: Once = Once::new();
 
+#[derive(Clone)]
 pub struct DataRepository {
     trello_store: TrelloDataStore,
 }
 
 impl DataRepository {
     pub fn new() -> Option<DataRepository> {
+        let mut dr: Option<DataRepository> = None;
         INIT.call_once(|| {
             let trello = TrelloDataStore::new(None, None); // TODO: Change this
-            unsafe {
-                data_repo = Some(DataRepository {
-                    trello_store: trello,
-                });
-            }
+            dr = Some(DataRepository {
+                trello_store: trello,
+            });
         });
 
-        unsafe {
-            data_repo
-        }
+        dr
     }
 }
 
