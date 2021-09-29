@@ -42,9 +42,18 @@ impl InteractiveCli {
         println!("Invalid command. {}", help.unwrap_or(String::from("")));
     }
 
+    fn print_available_commands(&mut self, commands: &Vec<&str>) {
+        println!("Available commands: ");
+        for command in commands {
+            println!("  {}", command);
+        }
+    }
+
     async fn handle_board_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["get-all", "help"];
+
         match input_iter.next().unwrap_or("") {
-            "" => self.print_invalid_command(None),
+            "help" => self.print_available_commands(&available_commands),
 
             "get-all" => {
                 let boards_result = self.command_exec.get_all_boards().await;
@@ -71,7 +80,10 @@ impl InteractiveCli {
                 };
             }
 
-            _ => self.print_invalid_command(None),
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
+            },
         }
     }
 }
@@ -84,8 +96,10 @@ pub async fn run() {
 
     let command_exec = CommandExecutor::new();
     let mut cli = InteractiveCli {
-        command_exec: command_exec
+        command_exec: command_exec,
     };
+
+    let available_commands = vec!["board", "exit", "help"];
 
     loop {
         cli.print_prompt(
@@ -112,12 +126,16 @@ pub async fn run() {
         let mut input_iter = input.split_ascii_whitespace();
         match input_iter.next().unwrap_or("") {
             "" => continue,
+            "help" => cli.print_available_commands(&available_commands),
 
             "board" => {
                 cli.handle_board_command(input_iter).await;
             }
 
-            _ => cli.print_invalid_command(None),
+            _ => {
+                cli.print_invalid_command(None);
+                cli.print_available_commands(&available_commands);
+            },
         }
     }
 }
