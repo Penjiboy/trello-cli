@@ -4,13 +4,14 @@ use crate::data::*;
 use async_trait::async_trait;
 use mongodb::{options::ClientOptions, Client, Database, Collection};
 use serde_json::{Map, Value};
+use futures::stream::{TryStreamExt};
 
 pub struct MongoDataStore {
     db: Database
 }
 
 impl MongoDataStore {
-    async fn new() -> MongoDataStore {
+    pub async fn new() -> MongoDataStore {
         // Parse a connection string into an options struct
         let mut client_options =
             ClientOptions::parse("mongodb://root:rootpassword@localhost:32392").await.unwrap();
@@ -33,6 +34,13 @@ impl MongoDataStore {
 impl DataStore for MongoDataStore {
     async fn get_all_boards(&mut self) -> Result<Vec<Board>, Box<dyn std::error::Error>> {
         let boards_collection: Collection<Board> = self.db.collection::<Board>("boards");
+        let cursor = boards_collection.find(None, None).await?;
+        let boards: Vec<Board> = cursor.try_collect().await?;
+
+        for board in &boards {
+            println!("{}", board.name);
+        }
+        Ok(boards)
     }
 }
 

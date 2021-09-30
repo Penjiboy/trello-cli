@@ -23,8 +23,8 @@ pub mod command_executor {
     }
 
     impl CommandExecutor {
-        pub fn new() -> CommandExecutor {
-            let bs = BoardService::new();
+        pub async fn new() -> CommandExecutor {
+            let bs = BoardService::new().await;
             CommandExecutor { board_service: bs }
         }
 

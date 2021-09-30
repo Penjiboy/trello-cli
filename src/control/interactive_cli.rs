@@ -94,7 +94,7 @@ pub async fn run() {
     let mut current_card: Option<Card> = None;
     let mut current_checklist: Option<CardChecklist> = None;
 
-    let command_exec = CommandExecutor::new();
+    let command_exec = CommandExecutor::new().await;
     let mut cli = InteractiveCli {
         command_exec: command_exec,
     };

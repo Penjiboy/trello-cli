@@ -6,9 +6,9 @@ pub struct BoardService {
 }
 
 impl BoardService {
-    pub fn new() -> BoardService {
+    pub async fn new() -> BoardService {
         let dr = DataRepository::new();
-        BoardService { data_repo: dr.unwrap() }
+        BoardService { data_repo: dr.await.unwrap() }
     }
 
     pub async fn get_all_boards(&mut self) -> Result<Vec<Board>, Box<dyn std::error::Error>> {
