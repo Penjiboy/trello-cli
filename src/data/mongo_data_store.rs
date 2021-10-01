@@ -3,7 +3,10 @@ use crate::data::*;
 
 use async_trait::async_trait;
 use futures::stream::TryStreamExt;
-use mongodb::{options::ClientOptions, Client, Collection, Database};
+use mongodb::{
+    bson::doc, options::ClientOptions, options::InsertManyOptions, options::UpdateOptions, Client,
+    Collection, Database,
+};
 use serde_json::{Map, Value};
 
 use std::sync::Once;
@@ -25,15 +28,25 @@ impl MongoDataStore {
         // Manually set an option
         client_options.app_name = Some(String::from("TrelloData"));
 
-        // Get a handle to the deployment
-        let client = Client::with_options(client_options).unwrap();
-        let _db = client.database("trelloData");
+        START.call_once(|| {
+            // Get a handle to the deployment
+            let client = Client::with_options(client_options).unwrap();
+            let _db = client.database("trelloData");
+            unsafe {
+                db = Some(_db);
+            }
+        });
+    }
+
+    pub async fn insert_boards(boards: &Vec<Board>) {
+        let boards_collection: Collection<Board>;
 
         unsafe {
-            START.call_once(|| {
-                db = Some(_db);
-            });
+            boards_collection = db.clone().unwrap().collection::<Board>("boards");
         }
+
+        let insert_options = InsertManyOptions::builder().ordered(Some(false)).build();
+        let insert_result = boards_collection.insert_many(boards, insert_options).await;
     }
 }
 
@@ -43,7 +56,8 @@ impl DataStore for MongoDataStore {
         let boards: Vec<Board>;
 
         unsafe {
-            let boards_collection: Collection<Board> = db.clone().unwrap().collection::<Board>("boards");
+            let boards_collection: Collection<Board> =
+                db.clone().unwrap().collection::<Board>("boards");
             let cursor = boards_collection.find(None, None).await?;
             boards = cursor.try_collect().await?;
         }

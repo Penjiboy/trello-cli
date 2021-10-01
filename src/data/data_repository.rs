@@ -25,9 +25,10 @@ pub struct DataRepository {
 impl DataRepository {
     pub async fn new() -> Option<DataRepository> {
         let mut dr: Option<DataRepository> = None;
+        MongoDataStore::init().await;
+
         INIT.call_once(|| {
             TrelloDataStore::init(None, None); // TODO: Change this
-            MongoDataStore::init();
 
             dr = Some(DataRepository {
                 active_board: None,
