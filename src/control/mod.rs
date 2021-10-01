@@ -30,7 +30,7 @@ pub mod command_executor {
 
         pub async fn get_all_boards(
             &mut self,
-        ) -> Result<CommandResult<Vec<Board>>, Box<dyn std::error::Error>> {
+        ) -> CommandResult<Vec<Board>> {
             let boards_result = self.board_service.get_all_boards().await;
             let command_result: CommandResult<Vec<Board>> = match boards_result {
                 Ok(boards) => {
@@ -54,7 +54,40 @@ pub mod command_executor {
                 }
             };
 
-            Ok(command_result)
+            command_result
+        }
+
+        pub async fn select_board(&mut self, name: &str) -> CommandResult<Board> {
+            let board_result = self.board_service.select_board(name).await;
+            let command_result: CommandResult<Board> = match board_result {
+                Ok(board) => {
+                    if board.is_some() {
+                        let _board = board.unwrap();
+                        let res_string = format!("Selected board {}", _board.name);
+                        CommandResult {
+                            result_code: CommandResultCode::Success,
+                            result: Some(_board),
+                            result_string: Some(res_string)
+                        }
+                    } else {
+                        CommandResult {
+                            result_code: CommandResultCode::Failed,
+                            result: None,
+                            result_string: Some(String::from("Failed to select board"))
+                        }
+                    }
+                }
+
+                Err(why) => {
+                    CommandResult {
+                        result_code: CommandResultCode::Failed,
+                        result: None,
+                        result_string: Some(String::from(why.to_string()))
+                    }
+                }
+            };
+
+            command_result
         }
     }
 }

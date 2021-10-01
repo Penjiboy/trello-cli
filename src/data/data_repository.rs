@@ -73,6 +73,27 @@ impl DataRepository {
             }
         }
     }
+
+    pub async fn select_board(&mut self, name: &str) -> Result<Option<Board>, Box<dyn std::error::Error>> {
+        let mut boards: Vec<Board> = vec![];
+        if self.cache_boards.is_none() {
+            let boards_result = self.get_all_boards().await;
+            if let Ok(all_boards) = boards_result {
+                boards = all_boards;
+            }
+        } else {
+            boards = self.cache_boards.clone().unwrap();
+        }
+
+        let mut result_board: Option<Board> = None;
+        for board in boards {
+            if board.name.eq_ignore_ascii_case(name) {
+                result_board.replace(board);
+            }
+        }
+
+        Ok(result_board)
+    }
 }
 
 #[async_trait]
