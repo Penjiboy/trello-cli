@@ -17,10 +17,10 @@
         * `get-all`
         * `due-dates`
         * `create-new` `{name}`
-        * `move-to-list` `{destination-list-name}`
         * `select-card` `{name}`
           * `get-description`
           * `edit-description` `{description}`
+          * `move-to-list` `{destination-list-name}`
           * `get-checklists`
           * `create-checklist` `{name}`
           * `select-checklist` `{name}`

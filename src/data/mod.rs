@@ -13,6 +13,8 @@ pub struct ID {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardLabel {
+    pub id: ID,
+    pub board_id: String,
     pub name: String,
     pub color: String,
 }
@@ -68,5 +70,15 @@ pub struct BoardList {
 pub struct Board {
     pub id: ID,
     pub name: String,
-    pub labels: Vec<CardLabel>,
+}
+
+#[derive(Debug)]
+pub struct NotImplError {}
+
+impl std::error::Error for NotImplError {}
+
+impl std::fmt::Display for NotImplError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Not implemented yet!")
+    }
 }

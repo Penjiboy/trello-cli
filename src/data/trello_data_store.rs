@@ -62,18 +62,6 @@ impl DataStore for TrelloDataStore {
         for board_json in boards.as_array().unwrap() {
             let label_names_map: &Map<String, Value> =
                 board_json["labelNames"].as_object().unwrap();
-            let mut card_labels: Vec<CardLabel> = Vec::new();
-            for color_key in label_names_map.keys() {
-                let label_name: String =
-                    String::from(label_names_map.get(color_key).unwrap().as_str().unwrap());
-                let label_color: String = String::from(color_key);
-                let card_label = CardLabel {
-                    color: label_color,
-                    name: label_name,
-                };
-
-                card_labels.push(card_label);
-            }
 
             let board_object = board_json.as_object().unwrap();
             let trello_id = Some(String::from(
@@ -86,13 +74,43 @@ impl DataStore for TrelloDataStore {
                     local_id: None,
                 },
                 name: board_name,
-                labels: card_labels,
             };
 
             result.push(board);
         }
 
         Ok(result)
+    }
+
+    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/boards?key={key}&token={token}&name={board_name}",
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+                board_name = name
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let trello_response = client.post(&full_url).send().await?.text().await?;
+
+        let board_serde: Value = serde_json::from_str(&trello_response)?;
+        let board_map = board_serde.as_object().unwrap();
+        let trello_id = board_map.get("id").unwrap().as_str().unwrap();
+        let board_name = board_map.get("name").unwrap().as_str().unwrap();
+        let board = Board {
+            id: ID {
+                trello_id: Some(String::from(trello_id)),
+                local_id: None
+            },
+            name: String::from(board_name)
+        };
+
+        Ok(board)
     }
 }
 

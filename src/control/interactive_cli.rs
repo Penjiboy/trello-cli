@@ -49,7 +49,7 @@ impl InteractiveCli {
     }
 
     async fn handle_board_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "help"];
+        let available_commands = vec!["get-all", "select <Name>", "create-new <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -75,6 +75,16 @@ impl InteractiveCli {
                 let remainder: Vec<&str> = input_iter.collect();
                 let board_name = remainder.join(" ");
                 let board_result = self.command_exec.select_board(&board_name).await;
+                println!("{}", board_result.result_string.unwrap());
+                if let CommandResultCode::Success = board_result.result_code {
+                    self.current_board.replace(board_result.result.unwrap());
+                }
+            }
+
+            "create-new" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let board_name = remainder.join(" ");
+                let board_result = self.command_exec.create_board(&board_name).await;
                 println!("{}", board_result.result_string.unwrap());
                 if let CommandResultCode::Success = board_result.result_code {
                     self.current_board.replace(board_result.result.unwrap());

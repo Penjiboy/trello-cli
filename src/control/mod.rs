@@ -28,9 +28,7 @@ pub mod command_executor {
             CommandExecutor { board_service: bs }
         }
 
-        pub async fn get_all_boards(
-            &mut self,
-        ) -> CommandResult<Vec<Board>> {
+        pub async fn get_all_boards(&mut self) -> CommandResult<Vec<Board>> {
             let boards_result = self.board_service.get_all_boards().await;
             let command_result: CommandResult<Vec<Board>> = match boards_result {
                 Ok(boards) => {
@@ -67,24 +65,44 @@ pub mod command_executor {
                         CommandResult {
                             result_code: CommandResultCode::Success,
                             result: Some(_board),
-                            result_string: Some(res_string)
+                            result_string: Some(res_string),
                         }
                     } else {
                         CommandResult {
                             result_code: CommandResultCode::Failed,
                             result: None,
-                            result_string: Some(String::from("Failed to select board"))
+                            result_string: Some(String::from("Failed to select board")),
                         }
                     }
                 }
 
-                Err(why) => {
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string())),
+                },
+            };
+
+            command_result
+        }
+
+        pub async fn create_board(&mut self, name: &str) -> CommandResult<Board> {
+            let board_result = self.board_service.create_board(name).await;
+            let command_result: CommandResult<Board> = match board_result {
+                Ok(board) => {
+                    let res_string = format!("Created board {}", board.name);
                     CommandResult {
-                        result_code: CommandResultCode::Failed,
-                        result: None,
-                        result_string: Some(String::from(why.to_string()))
+                        result_code: CommandResultCode::Success,
+                        result: Some(board),
+                        result_string: Some(res_string),
                     }
                 }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string())),
+                },
             };
 
             command_result

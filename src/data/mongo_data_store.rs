@@ -67,6 +67,10 @@ impl DataStore for MongoDataStore {
         }
         Ok(boards)
     }
+
+    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {

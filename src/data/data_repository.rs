@@ -74,6 +74,22 @@ impl DataRepository {
         }
     }
 
+    pub async fn create_board(&mut self, name: &str) -> Result<Board, Box<dyn std::error::Error>> {
+        let trello_board_result = TrelloDataStore::create_board(name).await;
+        match trello_board_result {
+            Ok(trello_board) => {
+                if self.cache_boards.is_some() {
+                    self.cache_boards.as_mut().unwrap().push(trello_board.clone());
+                }
+                Ok(trello_board)
+            }
+
+            Err(trello_why) => {
+                Err(trello_why)
+            }
+        }
+    }
+
     pub async fn select_board(&mut self, name: &str) -> Result<Option<Board>, Box<dyn std::error::Error>> {
         let mut boards: Vec<Board> = vec![];
         if self.cache_boards.is_none() {
@@ -99,4 +115,5 @@ impl DataRepository {
 #[async_trait]
 pub trait DataStore {
     async fn get_all_boards() -> Result<Vec<Board>, Box<dyn std::error::Error>>;
+    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>>;
 }
