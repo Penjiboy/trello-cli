@@ -34,4 +34,8 @@ impl BoardService {
     pub async fn update_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
         self.data_repo.update_board_label(board, name, color).await
     }
+
+    pub async fn create_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        self.data_repo.create_board_label(board, name, color).await
+    }
 }

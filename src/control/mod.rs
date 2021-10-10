@@ -173,5 +173,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn create_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> CommandResult<CardLabel> {
+            let create_result = self.board_service.create_board_label(board, name, color).await;
+            let command_result: CommandResult<CardLabel> = match create_result {
+                Ok(label) => {
+                    let res_string = format!("Created label");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(label),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

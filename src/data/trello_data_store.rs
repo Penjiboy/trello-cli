@@ -227,6 +227,50 @@ impl DataStore for TrelloDataStore {
 
         Ok(label)
     }
+
+    async fn create_board_label(
+        board_id: &str,
+        name: &str,
+        color: &str
+    ) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/boards/{board_id}/labels?key={key}&token={token}&name={name}&color={color}",
+                board_id = board_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+                name = name,
+                color = color
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.post(&full_url).send().await?;
+        let response_text = response.text().await?;
+        let label_json: Value = serde_json::from_str(&response_text)?;
+        let label_object = label_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            label_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let board_id = String::from(label_object.get("idBoard").unwrap().as_str().unwrap());
+        let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
+        let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
+
+        let label = CardLabel {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            board_id: String::from(board_id),
+            name: label_name,
+            color: label_color,
+        };
+
+        Ok(label)
+    }
 }
 
 #[cfg(test)]

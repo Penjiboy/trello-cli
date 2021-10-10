@@ -246,6 +246,23 @@ impl DataRepository {
             return TrelloDataStore::update_board_label(&label_id.unwrap(), name, color).await;
         }
     }
+
+    pub async fn create_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        let board_id: String;
+
+        if board.is_none() && self.active_board.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's label to create"))}));
+        } else {
+            board_id = if board.is_some() {
+                self.active_board.replace(board.unwrap().clone());
+                self.active_board.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_board.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+        self.invalidate_caches(false, true, false, true);
+        return TrelloDataStore::create_board_label(&board_id, name, color).await;
+    }
 }
 
 #[async_trait]
@@ -257,4 +274,5 @@ pub trait DataStore {
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>>;
     async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>>;
     async fn update_board_label(label_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
+    async fn create_board_label(board_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
 }
