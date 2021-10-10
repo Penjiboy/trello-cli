@@ -82,3 +82,14 @@ impl std::fmt::Display for NotImplError {
         write!(f, "Not implemented yet!")
     }
 }
+
+#[derive(Debug)]
+pub struct InvalidInputError {}
+
+impl std::error::Error for InvalidInputError {}
+
+impl std::fmt::Display for InvalidInputError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Invalid Input!")
+    }
+}

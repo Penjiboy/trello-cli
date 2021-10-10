@@ -48,6 +48,36 @@ impl InteractiveCli {
         }
     }
 
+    async fn handle_label_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["get-all", "help"];
+        match input_iter.next().unwrap_or("") {
+            "help" => self.print_available_commands(&available_commands),
+
+            "get-all" => {
+                let labels_result = self.command_exec.get_all_board_labels(None).await;
+                println!("{}", labels_result.result_string.unwrap());
+                match labels_result.result_code {
+                    CommandResultCode::Success => {
+                        let labels: Vec<CardLabel> = labels_result.result.unwrap();
+                        println!("Labels: ");
+                        for label in labels {
+                            println!("{name}: {color}", name=label.name, color=label.color);
+                        }
+                    }
+
+                    CommandResultCode::Failed => {
+                        println!("Command Failed. Do you have a board selected?");
+                    }
+                }
+            }
+
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
+            }
+        }
+    }
+
     async fn handle_board_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
         let available_commands = vec!["get-all", "select <Name>", "create-new <Name>", "help"];
         match input_iter.next().unwrap_or("") {
@@ -86,9 +116,6 @@ impl InteractiveCli {
                 let board_name = remainder.join(" ");
                 let board_result = self.command_exec.create_board(&board_name).await;
                 println!("{}", board_result.result_string.unwrap());
-                if let CommandResultCode::Success = board_result.result_code {
-                    self.current_board.replace(board_result.result.unwrap());
-                }
             }
 
             _ => {
@@ -109,7 +136,7 @@ pub async fn run() {
         current_checklist: None,
     };
 
-    let available_commands = vec!["board", "exit", "help"];
+    let available_commands = vec!["board", "label", "exit", "help"];
 
     loop {
         cli.print_prompt();
@@ -138,6 +165,9 @@ pub async fn run() {
                 cli.handle_board_command(input_iter).await;
             }
 
+            "label" => {
+                cli.handle_label_command(input_iter).await;
+            }
             _ => {
                 cli.print_invalid_command(None);
                 cli.print_available_commands(&available_commands);

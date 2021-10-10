@@ -107,5 +107,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn get_all_board_labels(&mut self, board: Option<Board>) -> CommandResult<Vec<CardLabel>> {
+            let labels_result = self.board_service.get_all_board_labels(board).await;
+            let command_result: CommandResult<Vec<CardLabel>> = match labels_result {
+                Ok(labels) => {
+                    let res_string = format!("Retrieved {} board labels", labels.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(labels),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

@@ -112,6 +112,45 @@ impl DataStore for TrelloDataStore {
 
         Ok(board)
     }
+
+    async fn get_all_board_labels(board_id: &str) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/boards/{id}/labels?key={key}&token={token}",
+                id = board_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let trello_response = reqwest::get(&full_url).await?.text().await?;
+
+        let labels: Value = serde_json::from_str(&trello_response)?;
+
+        let mut result: Vec<CardLabel> = Vec::new();
+        for labels_json in labels.as_array().unwrap() {
+            let label_object = labels_json.as_object().unwrap();
+            let trello_id = Some(String::from(label_object.get("id").unwrap().as_str().unwrap()));
+            let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
+            let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
+
+            let label = CardLabel {
+                id: ID {
+                    trello_id: trello_id,
+                    local_id: None
+                },
+                board_id: String::from(board_id),
+                name: label_name,
+                color: label_color
+            };
+            result.push(label);
+        }
+
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
