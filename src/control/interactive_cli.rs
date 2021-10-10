@@ -49,7 +49,7 @@ impl InteractiveCli {
     }
 
     async fn handle_label_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "delete <Label_Name>", "help"];
+        let available_commands = vec!["get-all", "delete <Label_Name>", "update <Label_Name> <Label_Color>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -75,7 +75,19 @@ impl InteractiveCli {
                 let remainder: Vec<&str> = input_iter.collect();
                 let label_name = remainder.join(" ");
                 let delete_result = self.command_exec.delete_board_label(None, &label_name).await;
-                println!("{}", delete_result.result_string.unwrap())
+                println!("{}", delete_result.result_string.unwrap());
+            }
+
+            "update" => {
+                let name = input_iter.next().unwrap_or("");
+                let color = input_iter.next().unwrap_or("");
+                if name.is_empty() || color.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide both name and color")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let update_result = self.command_exec.update_board_label(None, name, color).await;
+                    println!("{}", update_result.result_string.unwrap());
+                }
             }
 
             _ => {

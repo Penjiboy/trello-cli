@@ -79,6 +79,10 @@ impl DataStore for MongoDataStore {
     async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn update_board_label(label_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {

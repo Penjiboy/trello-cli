@@ -151,5 +151,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn update_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> CommandResult<CardLabel> {
+            let update_result = self.board_service.update_board_label(board, name, color).await;
+            let command_result: CommandResult<CardLabel> = match update_result {
+                Ok(label) => {
+                    let res_string = format!("Updated label");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(label),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

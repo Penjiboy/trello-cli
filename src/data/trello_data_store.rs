@@ -105,15 +105,17 @@ impl DataStore for TrelloDataStore {
         let board = Board {
             id: ID {
                 trello_id: Some(String::from(trello_id)),
-                local_id: None
+                local_id: None,
             },
-            name: String::from(board_name)
+            name: String::from(board_name),
         };
 
         Ok(board)
     }
 
-    async fn get_all_board_labels(board_id: &str) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
+    async fn get_all_board_labels(
+        board_id: &str,
+    ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
         let mut url_path: String = String::from("");
         unsafe {
             url_path = format!(
@@ -133,18 +135,20 @@ impl DataStore for TrelloDataStore {
         let mut result: Vec<CardLabel> = Vec::new();
         for labels_json in labels.as_array().unwrap() {
             let label_object = labels_json.as_object().unwrap();
-            let trello_id = Some(String::from(label_object.get("id").unwrap().as_str().unwrap()));
+            let trello_id = Some(String::from(
+                label_object.get("id").unwrap().as_str().unwrap(),
+            ));
             let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
             let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
 
             let label = CardLabel {
                 id: ID {
                     trello_id: trello_id,
-                    local_id: None
+                    local_id: None,
                 },
                 board_id: String::from(board_id),
                 name: label_name,
-                color: label_color
+                color: label_color,
             };
             result.push(label);
         }
@@ -171,10 +175,58 @@ impl DataStore for TrelloDataStore {
         if response_status.is_success() {
             Ok(())
         } else {
-            Err(Box::new(InvalidInputError{ message: Some(format!("Failed to delete label. {}", response_status.canonical_reason().unwrap_or("")) )}))
+            Err(Box::new(InvalidInputError {
+                message: Some(format!(
+                    "Failed to delete label. {}",
+                    response_status.canonical_reason().unwrap_or("")
+                )),
+            }))
         }
     }
 
+    async fn update_board_label(
+        label_id: &str,
+        name: &str,
+        color: &str,
+    ) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/labels/{id}?key={key}&token={token}&name={name}&color={color}",
+                id = label_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+                name = name,
+                color = color
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.put(&full_url).send().await?;
+        let response_text = response.text().await?;
+        let label_json: Value = serde_json::from_str(&response_text)?;
+        let label_object = label_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            label_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let board_id = String::from(label_object.get("idBoard").unwrap().as_str().unwrap());
+        let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
+        let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
+
+        let label = CardLabel {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            board_id: String::from(board_id),
+            name: label_name,
+            color: label_color,
+        };
+
+        Ok(label)
+    }
 }
 
 #[cfg(test)]
@@ -184,7 +236,11 @@ mod tests {
     #[test]
     fn init() {
         unsafe {
-            println!("Key: {:?}\nToken: {:?}", key.clone().unwrap(), token.clone().unwrap());
+            println!(
+                "Key: {:?}\nToken: {:?}",
+                key.clone().unwrap(),
+                token.clone().unwrap()
+            );
             assert_ne!(key.clone().unwrap(), String::from(""));
             assert_ne!(token.clone().unwrap(), String::from(""));
         }

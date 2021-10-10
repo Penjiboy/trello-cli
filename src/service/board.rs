@@ -30,4 +30,8 @@ impl BoardService {
     pub async fn delete_board_label(&mut self, board: Option<Board>, label_name: &str) -> Result<(), Box<dyn std::error::Error>> {
         self.data_repo.delete_board_label(board, label_name).await
     }
+
+    pub async fn update_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        self.data_repo.update_board_label(board, name, color).await
+    }
 }
