@@ -129,5 +129,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn delete_board_label(&mut self, board: Option<Board>, label_name: &str) -> CommandResult<()> {
+            let delete_result = self.board_service.delete_board_label(board, label_name).await;
+            let command_result: CommandResult<()> = match delete_result {
+                Ok(()) => {
+                    let res_string = format!("Deleted label");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(()),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

@@ -49,7 +49,7 @@ impl InteractiveCli {
     }
 
     async fn handle_label_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "help"];
+        let available_commands = vec!["get-all", "delete <Label_Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -69,6 +69,13 @@ impl InteractiveCli {
                         println!("Command Failed. Do you have a board selected?");
                     }
                 }
+            }
+
+            "delete" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let label_name = remainder.join(" ");
+                let delete_result = self.command_exec.delete_board_label(None, &label_name).await;
+                println!("{}", delete_result.result_string.unwrap())
             }
 
             _ => {

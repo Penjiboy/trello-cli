@@ -86,7 +86,7 @@ impl DataStore for TrelloDataStore {
         let mut url_path: String = String::from("");
         unsafe {
             url_path = format!(
-                "/boards?key={key}&token={token}&name={board_name}",
+                "/boards?key={key}&token={token}&name={board_name}&defaultLabels=false",
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
                 board_name = name
@@ -151,6 +151,30 @@ impl DataStore for TrelloDataStore {
 
         Ok(result)
     }
+
+    async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/labels/{id}?key={key}&token={token}",
+                id = label_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.delete(&full_url).send().await?;
+        let response_status = response.status();
+        if response_status.is_success() {
+            Ok(())
+        } else {
+            Err(Box::new(InvalidInputError{ message: Some(format!("Failed to delete label. {}", response_status.canonical_reason().unwrap_or("")) )}))
+        }
+    }
+
 }
 
 #[cfg(test)]

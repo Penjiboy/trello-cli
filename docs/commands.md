@@ -6,12 +6,13 @@
   * `select` `{name}`
     * `label`
       * `get-all`
-      * `create-new` `{name}`
-      * `delete` `{label-id}`
+      * `create-new` `{name} {color}`
+      * `delete` `{name}`
+      * `update {name} {color}`
     * `list`
       * `get-all`
       * `create-new` `{name}`
-      * `delete` `{list-id}`
+      * `delete` `{list-name}`
       * `select` `{name}`
         * `card-count`
         * `get-all`

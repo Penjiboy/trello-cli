@@ -84,12 +84,14 @@ impl std::fmt::Display for NotImplError {
 }
 
 #[derive(Debug)]
-pub struct InvalidInputError {}
+pub struct InvalidInputError {
+    message: Option<String>
+}
 
 impl std::error::Error for InvalidInputError {}
 
 impl std::fmt::Display for InvalidInputError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Invalid Input!")
+        write!(f, "Invalid Input! {}", self.message.as_ref().unwrap_or(&String::from("")))
     }
 }

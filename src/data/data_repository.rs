@@ -147,7 +147,7 @@ impl DataRepository {
         if board.is_none() {
             if self.cache_labels.is_none() {
                 if self.active_board.is_none() {
-                    return Err(Box::new(InvalidInputError {}));
+                    return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's labels to get"))}));
                 } else {
                     board_id = self.active_board.clone().unwrap().id.trello_id.unwrap();
                 }
@@ -172,6 +172,42 @@ impl DataRepository {
             }
         }
     }
+
+    pub async fn delete_board_label(&mut self, board: Option<Board>, label_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let board_id: String;
+        let labels: Vec<CardLabel>;
+        let mut label_id: Option<String> = None;
+
+        if board.is_none() && self.active_board.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's label to delete"))}));
+        } else {
+            board_id = if board.is_some() {
+                self.active_board.replace(board.unwrap().clone());
+                self.active_board.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_board.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+
+        labels = if self.cache_labels.is_none() {
+            self.get_all_board_labels(Some(self.active_board.clone().unwrap())).await?
+        } else {
+            self.cache_labels.clone().unwrap()
+        };
+
+        for label in labels {
+            if label.name.eq_ignore_ascii_case(label_name) && label.board_id.eq_ignore_ascii_case(&board_id) {
+                label_id = Some(label.id.trello_id.unwrap());
+            }
+        }
+
+        self.invalidate_caches(false, true, false, true);
+        if label_id.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("Could not find the given label name for the chosen board"))}));
+        } else {
+            return TrelloDataStore::delete_board_label(&label_id.unwrap()).await;
+        }
+    }
 }
 
 #[async_trait]
@@ -181,4 +217,5 @@ pub trait DataStore {
     async fn get_all_board_labels(
         board_id: &str,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>>;
+    async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>>;
 }

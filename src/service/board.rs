@@ -26,4 +26,8 @@ impl BoardService {
     pub async fn get_all_board_labels(&mut self, board: Option<Board>) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
         self.data_repo.get_all_board_labels(board).await
     }
+
+    pub async fn delete_board_label(&mut self, board: Option<Board>, label_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.data_repo.delete_board_label(board, label_name).await
+    }
 }

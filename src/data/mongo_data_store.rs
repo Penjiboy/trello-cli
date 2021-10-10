@@ -75,6 +75,10 @@ impl DataStore for MongoDataStore {
     async fn get_all_board_labels(board_id: &str) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {
