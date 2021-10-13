@@ -42,4 +42,8 @@ impl BoardService {
     pub async fn get_all_board_lists(&mut self, board: Option<Board>) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
         self.data_repo.get_all_board_lists(board).await
     }
+
+    pub async fn create_board_list(&mut self, board: Option<Board>, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+        self.data_repo.create_board_list(board, name).await
+    }
 }

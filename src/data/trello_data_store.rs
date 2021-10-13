@@ -312,6 +312,43 @@ impl DataStore for TrelloDataStore {
 
         Ok(result)
     }
+
+    async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/boards/{board_id}/lists?key={key}&token={token}&name={name}",
+                board_id = board_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+                name = name,
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.post(&full_url).send().await?;
+        let response_text = response.text().await?;
+        let list_json: Value = serde_json::from_str(&response_text)?;
+        let list_object = list_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            list_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let board_id = String::from(list_object.get("idBoard").unwrap().as_str().unwrap());
+        let list_name = String::from(list_object.get("name").unwrap().as_str().unwrap());
+
+        let list = BoardList {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            board_id: String::from(board_id),
+            name: list_name,
+        };
+
+        Ok(list)
+    }
 }
 
 #[cfg(test)]

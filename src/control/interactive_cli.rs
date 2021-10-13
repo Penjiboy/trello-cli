@@ -157,7 +157,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "help"];
+        let available_commands = vec!["get-all", "create <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -176,6 +176,18 @@ impl InteractiveCli {
                     CommandResultCode::Failed => {
                         println!("Command Failed. Do you have a board selected?");
                     }
+                }
+            }
+
+            "create" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let list_name = remainder.join(" ");
+                if list_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let list_result = self.command_exec.create_board_list(None, &list_name).await;
+                    println!("{}", list_result.result_string.unwrap());
                 }
             }
 

@@ -217,5 +217,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn create_board_list(&mut self, board: Option<Board>, name: &str) -> CommandResult<BoardList> {
+            let create_result = self.board_service.create_board_list(board, name).await;
+            let command_result: CommandResult<BoardList> = match create_result {
+                Ok(list) => {
+                    let res_string = format!("Created list");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(list),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }
