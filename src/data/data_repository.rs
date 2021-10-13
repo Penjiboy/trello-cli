@@ -17,7 +17,7 @@ pub struct DataRepository {
     active_checklist: Option<CardChecklist>,
 
     cache_boards: Option<Vec<Board>>,
-    cache_boardlists: Option<Vec<Board>>,
+    cache_boardlists: Option<Vec<BoardList>>,
     cache_cards: Option<Vec<Card>>,
     cache_checklists: Option<Vec<CardChecklist>>,
     cache_labels: Option<Vec<CardLabel>>,
@@ -263,16 +263,54 @@ impl DataRepository {
         self.invalidate_caches(false, true, false, true);
         return TrelloDataStore::create_board_label(&board_id, name, color).await;
     }
+
+    pub async fn get_all_board_lists(
+        &mut self,
+        board: Option<Board>,
+    ) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
+        let board_id: String;
+
+        if board.is_none() {
+            if self.cache_labels.is_none() {
+                if self.active_board.is_none() {
+                    return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's lists to get"))}));
+                } else {
+                    board_id = self.active_board.clone().unwrap().id.trello_id.unwrap();
+                }
+            } else {
+                let lists = self.cache_boardlists.clone().unwrap();
+                return Ok(lists);
+            }
+        } else {
+            board_id = board.clone().unwrap().id.trello_id.unwrap();
+            self.invalidate_caches(true, true, true, true);
+        }
+
+        let lists_result = TrelloDataStore::get_all_board_lists(&board_id).await;
+        match lists_result {
+            Ok(trello_lists) => {
+                self.cache_boardlists.replace(trello_lists.clone());
+                Ok(trello_lists)
+            }
+
+            Err(why) => {
+                Err(why)
+            }
+        }
+    }
 }
 
 #[async_trait]
 pub trait DataStore {
     async fn get_all_boards() -> Result<Vec<Board>, Box<dyn std::error::Error>>;
     async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>>;
+
     async fn get_all_board_labels(
         board_id: &str,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>>;
     async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>>;
     async fn update_board_label(label_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
     async fn create_board_label(board_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
+
+    async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>>;
 }

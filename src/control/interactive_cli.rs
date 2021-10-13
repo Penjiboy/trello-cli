@@ -155,6 +155,36 @@ impl InteractiveCli {
             }
         }
     }
+
+    async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["get-all", "help"];
+        match input_iter.next().unwrap_or("") {
+            "help" => self.print_available_commands(&available_commands),
+
+            "get-all" => {
+                let lists_result = self.command_exec.get_all_board_lists(None).await;
+                println!("{}", lists_result.result_string.unwrap());
+                match lists_result.result_code {
+                    CommandResultCode::Success => {
+                        let lists: Vec<BoardList> = lists_result.result.unwrap();
+                        println!("Lists: ");
+                        for list in lists {
+                            println!("  - {name}", name=list.name);
+                        }
+                    }
+
+                    CommandResultCode::Failed => {
+                        println!("Command Failed. Do you have a board selected?");
+                    }
+                }
+            }
+
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
+            }
+        }
+    }
 }
 
 pub async fn run() {
@@ -167,7 +197,7 @@ pub async fn run() {
         current_checklist: None,
     };
 
-    let available_commands = vec!["board", "label", "exit", "help"];
+    let available_commands = vec!["board", "label", "list", "exit", "help"];
 
     loop {
         cli.print_prompt();
@@ -198,6 +228,10 @@ pub async fn run() {
 
             "label" => {
                 cli.handle_label_command(input_iter).await;
+            }
+
+            "list" => {
+                cli.handle_list_command(input_iter).await;
             }
             _ => {
                 cli.print_invalid_command(None);

@@ -62,8 +62,7 @@ pub struct CardDueDate {
 pub struct BoardList {
     pub id: ID,
     pub name: String,
-    pub board: Board,
-    pub cards: Vec<Card>,
+    pub board_id: String,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

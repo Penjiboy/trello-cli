@@ -195,5 +195,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn get_all_board_lists(&mut self, board: Option<Board>) -> CommandResult<Vec<BoardList>> {
+            let lists_result = self.board_service.get_all_board_lists(board).await;
+            let command_result: CommandResult<Vec<BoardList>> = match lists_result {
+                Ok(lists) => {
+                    let res_string = format!("Retrieved {} lists", lists.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(lists),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

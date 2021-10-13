@@ -38,4 +38,8 @@ impl BoardService {
     pub async fn create_board_label(&mut self, board: Option<Board>, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
         self.data_repo.create_board_label(board, name, color).await
     }
+
+    pub async fn get_all_board_lists(&mut self, board: Option<Board>) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
+        self.data_repo.get_all_board_lists(board).await
+    }
 }
