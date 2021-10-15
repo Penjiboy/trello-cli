@@ -270,5 +270,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn get_all_list_cards(&mut self, list: Option<BoardList>) -> CommandResult<Vec<Card>> {
+            let cards_result = self.board_service.get_all_list_cards(list).await;
+            let command_result: CommandResult<Vec<Card>> = match cards_result {
+                Ok(cards) => {
+                    let res_string = format!("Retrieved {} cards", cards.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(cards),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

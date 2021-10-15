@@ -95,6 +95,10 @@ impl DataStore for MongoDataStore {
     async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {

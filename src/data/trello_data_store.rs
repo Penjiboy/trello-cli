@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 use std::sync::Once;
+use std::str::FromStr;
 
 use crate::data::data_repository::DataStore;
 use crate::data::*;
@@ -8,6 +9,7 @@ use crate::data::*;
 use async_trait::async_trait;
 use reqwest;
 use serde_json::{Map, Value};
+use datetime;
 
 static START: Once = Once::new();
 
@@ -354,6 +356,86 @@ impl DataStore for TrelloDataStore {
         };
 
         Ok(list)
+    }
+
+    async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/lists/{id}/cards?key={key}&token={token}",
+                id = list_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let trello_response = reqwest::get(&full_url).await?.text().await?;
+
+        let cards: Value = serde_json::from_str(&trello_response)?;
+
+        let mut result: Vec<Card> = Vec::new();
+        for card_json in cards.as_array().unwrap() {
+
+            let card_object = card_json.as_object().unwrap();
+            let trello_id = Some(String::from(
+                card_object.get("id").unwrap().as_str().unwrap(),
+            ));
+            let card_name = String::from(card_object.get("name").unwrap().as_str().unwrap());
+            let id_list = String::from(card_object.get("idList").unwrap().as_str().unwrap());
+            
+            let mut id_checklists: Vec<ID> = Vec::new();
+            for checklist_id in card_object.get("idChecklists").unwrap().as_array().unwrap() {
+                let id = ID {
+                    trello_id: Some(String::from(checklist_id.as_str().unwrap())),
+                    local_id: None
+                };
+                id_checklists.push(id);
+            }
+
+            let mut id_labels: Vec<ID> = Vec::new();
+            for label_id in card_object.get("idLabels").unwrap().as_array().unwrap() {
+                let id = ID {
+                    trello_id: Some(String::from(label_id.as_str().unwrap())),
+                    local_id: None
+                };
+                id_labels.push(id);
+            }
+
+            let description: String = card_object.get("desc").unwrap().as_str().unwrap().to_string();
+
+            let due_complete: bool = card_object.get("dueComplete").unwrap().as_bool().unwrap();
+
+            let due_string: Option<&str> = card_object.get("due").unwrap().as_str();
+            let due_instant_ms: i16 = if due_string.is_none() {
+                0
+            } else {
+                let due_datetime: datetime::LocalDateTime = datetime::LocalDateTime::from_str(due_string.unwrap())?;
+                due_datetime.to_instant().milliseconds()
+            };
+
+            let card = Card {
+                id: ID {
+                    trello_id: trello_id,
+                    local_id: None,
+                },
+                name: card_name,
+                description: description,
+                due_complete: due_complete,
+                due_date_instant_ms: due_instant_ms,
+                list_id: ID {
+                    trello_id: Some(id_list),
+                    local_id: None,
+                },
+                checklists_ids: id_checklists,
+                label_ids: id_labels,
+            };
+
+            result.push(card);
+        }
+
+        Ok(result)
     }
 }
 

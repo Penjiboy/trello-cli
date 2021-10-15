@@ -271,7 +271,7 @@ impl DataRepository {
         let board_id: String;
 
         if board.is_none() {
-            if self.cache_labels.is_none() {
+            if self.cache_boardlists.is_none() {
                 if self.active_board.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's lists to get"))}));
                 } else {
@@ -342,6 +342,41 @@ impl DataRepository {
         self.invalidate_caches(true, true, true, true);
         Ok(result_list)
     }
+
+    pub async fn get_all_list_cards(
+        &mut self,
+        list: Option<BoardList>,
+    ) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+        let list_id: String;
+
+        if list.is_none() {
+            if self.cache_cards.is_none() {
+                if self.active_boardlist.is_none() {
+                    return Err(Box::new(InvalidInputError { message: Some(String::from("No list has been selected. Unable to infer which list's cards to get"))}));
+                } else {
+                    list_id = self.active_boardlist.clone().unwrap().id.trello_id.unwrap();
+                }
+            } else {
+                let cards = self.cache_cards.clone().unwrap();
+                return Ok(cards);
+            }
+        } else {
+            list_id = list.clone().unwrap().id.trello_id.unwrap();
+            self.invalidate_caches(true, true, true, true);
+        }
+
+        let cards_result = TrelloDataStore::get_all_list_cards(&list_id).await;
+        match cards_result {
+            Ok(trello_cards) => {
+                self.cache_cards.replace(trello_cards.clone());
+                Ok(trello_cards)
+            }
+
+            Err(why) => {
+                Err(why)
+            }
+        }
+    }
 }
 
 #[async_trait]
@@ -358,4 +393,6 @@ pub trait DataStore {
 
     async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>>;
     async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>>;
+
+    async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>>;
 }

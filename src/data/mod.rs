@@ -47,6 +47,7 @@ pub struct Card {
     pub name: String,
     pub description: String,
     pub due_date_instant_ms: i16,
+    pub due_complete: bool,
     pub label_ids: Vec<ID>,
     pub checklists_ids: Vec<ID>,
     pub list_id: ID,
