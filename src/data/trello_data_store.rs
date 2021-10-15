@@ -304,7 +304,10 @@ impl DataStore for TrelloDataStore {
                     local_id: None,
                 },
                 name: list_name,
-                board_id: id_board
+                board_id: ID {
+                    trello_id: Some(id_board),
+                    local_id: None,
+                }
             };
 
             result.push(list);
@@ -343,7 +346,10 @@ impl DataStore for TrelloDataStore {
                 trello_id: trello_id,
                 local_id: None,
             },
-            board_id: String::from(board_id),
+            board_id: ID {
+                trello_id: Some(board_id),
+                local_id: None,
+            },
             name: list_name,
         };
 

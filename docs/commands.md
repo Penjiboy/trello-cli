@@ -15,9 +15,9 @@
       * `delete` `{list-name}`
       * `select` `{name}`
         * `card-count`
-        * `get-all`
+        * `get-cards`
         * `due-dates`
-        * `create-new` `{name}`
+        * `create-card` `{name}`
         * `select-card` `{name}`
           * `get-description`
           * `edit-description` `{description}`
