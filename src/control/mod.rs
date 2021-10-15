@@ -239,5 +239,36 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn select_board_list(&mut self, name: &str, board: Option<Board>) -> CommandResult<BoardList> {
+            let list_result = self.board_service.select_board_list(name, board).await;
+            let command_result: CommandResult<BoardList> = match list_result {
+                Ok(list) => {
+                    if list.is_some() {
+                        let _list = list.unwrap();
+                        let res_string = format!("Selected list {}", _list.name);
+                        CommandResult {
+                            result_code: CommandResultCode::Success,
+                            result: Some(_list),
+                            result_string: Some(res_string),
+                        }
+                    } else {
+                        CommandResult {
+                            result_code: CommandResultCode::Failed,
+                            result: None,
+                            result_string: Some(String::from("Failed to select list")),
+                        }
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string())),
+                },
+            };
+
+            command_result
+        }
     }
 }

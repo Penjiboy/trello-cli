@@ -315,6 +315,33 @@ impl DataRepository {
         self.invalidate_caches(false, true, true, true);
         return TrelloDataStore::create_board_list(&board_id, name).await;
     }
+
+    pub async fn select_board_list(
+        &mut self,
+        name: &str,
+        board: Option<Board>
+    ) -> Result<Option<BoardList>, Box<dyn std::error::Error>> {
+        let mut lists: Vec<BoardList> = vec![];
+        if self.cache_boardlists.is_none() {
+            let lists_result = self.get_all_board_lists(board).await;
+            if let Ok(all_lists) = lists_result {
+                lists = all_lists;
+            }
+        } else {
+            lists = self.cache_boardlists.clone().unwrap();
+        }
+
+        let mut result_list: Option<BoardList> = None;
+        for list in lists {
+            if list.name.eq_ignore_ascii_case(name) {
+                self.active_boardlist.replace(list.clone());
+                result_list.replace(list);
+            }
+        }
+
+        self.invalidate_caches(true, true, true, true);
+        Ok(result_list)
+    }
 }
 
 #[async_trait]

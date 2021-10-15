@@ -46,4 +46,8 @@ impl BoardService {
     pub async fn create_board_list(&mut self, board: Option<Board>, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
         self.data_repo.create_board_list(board, name).await
     }
+
+    pub async fn select_board_list(&mut self, name: &str, board: Option<Board>) -> Result<Option<BoardList>, Box<dyn std::error::Error>> {
+        self.data_repo.select_board_list(name, board).await
+    }
 }

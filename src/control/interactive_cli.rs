@@ -49,7 +49,13 @@ impl InteractiveCli {
     }
 
     async fn handle_label_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all","create <Label_Name> <Label_Color>", "delete <Label_Name>", "update <Label_Name> <Label_Color>", "help"];
+        let available_commands = vec![
+            "get-all",
+            "create <Label_Name> <Label_Color>",
+            "delete <Label_Name>",
+            "update <Label_Name> <Label_Color>",
+            "help",
+        ];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -61,7 +67,7 @@ impl InteractiveCli {
                         let labels: Vec<CardLabel> = labels_result.result.unwrap();
                         println!("Labels: ");
                         for label in labels {
-                            println!("{name}: {color}", name=label.name, color=label.color);
+                            println!("{name}: {color}", name = label.name, color = label.color);
                         }
                     }
 
@@ -75,10 +81,15 @@ impl InteractiveCli {
                 let name = input_iter.next().unwrap_or("");
                 let color = input_iter.next().unwrap_or("");
                 if name.is_empty() || color.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide both name and color")));
+                    self.print_invalid_command(Some(String::from(
+                        "You must provide both name and color",
+                    )));
                     self.print_available_commands(&available_commands);
                 } else {
-                    let create_result = self.command_exec.create_board_label(None, name, color).await;
+                    let create_result = self
+                        .command_exec
+                        .create_board_label(None, name, color)
+                        .await;
                     println!("{}", create_result.result_string.unwrap());
                 }
             }
@@ -86,7 +97,10 @@ impl InteractiveCli {
             "delete" => {
                 let remainder: Vec<&str> = input_iter.collect();
                 let label_name = remainder.join(" ");
-                let delete_result = self.command_exec.delete_board_label(None, &label_name).await;
+                let delete_result = self
+                    .command_exec
+                    .delete_board_label(None, &label_name)
+                    .await;
                 println!("{}", delete_result.result_string.unwrap());
             }
 
@@ -94,10 +108,15 @@ impl InteractiveCli {
                 let name = input_iter.next().unwrap_or("");
                 let color = input_iter.next().unwrap_or("");
                 if name.is_empty() || color.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide both name and color")));
+                    self.print_invalid_command(Some(String::from(
+                        "You must provide both name and color",
+                    )));
                     self.print_available_commands(&available_commands);
                 } else {
-                    let update_result = self.command_exec.update_board_label(None, name, color).await;
+                    let update_result = self
+                        .command_exec
+                        .update_board_label(None, name, color)
+                        .await;
                     println!("{}", update_result.result_string.unwrap());
                 }
             }
@@ -157,7 +176,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "create <Name>", "help"];
+        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -169,12 +188,27 @@ impl InteractiveCli {
                         let lists: Vec<BoardList> = lists_result.result.unwrap();
                         println!("Lists: ");
                         for list in lists {
-                            println!("  - {name}", name=list.name);
+                            println!("  - {name}", name = list.name);
                         }
                     }
 
                     CommandResultCode::Failed => {
                         println!("Command Failed. Do you have a board selected?");
+                    }
+                }
+            }
+
+            "select" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let list_name = remainder.join(" ");
+                if list_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let list_result = self.command_exec.select_board_list(&list_name, None).await;
+                    println!("{}", list_result.result_string.unwrap());
+                    if let CommandResultCode::Success = list_result.result_code {
+                        self.current_list.replace(list_result.result.unwrap());
                     }
                 }
             }
