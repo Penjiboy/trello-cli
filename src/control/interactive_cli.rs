@@ -260,6 +260,8 @@ impl InteractiveCli {
                     println!("{}", card_result.result_string.unwrap());
                     if let CommandResultCode::Success = card_result.result_code {
                         self.current_card.replace(card_result.result.unwrap());
+                        let description: String = self.current_card.clone().unwrap().description;
+                        println!("Card Description: \n{}", description);
                     }
                 }
             }
