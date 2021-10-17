@@ -41,6 +41,29 @@ impl TrelloDataStore {
         }
     }
 
+    fn parse_list_from_json(list_json: &Value) -> Result<BoardList, Box<dyn std::error::Error>> {
+        let list_object = list_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            list_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let board_id = String::from(list_object.get("idBoard").unwrap().as_str().unwrap());
+        let list_name = String::from(list_object.get("name").unwrap().as_str().unwrap());
+
+        let list = BoardList {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            board_id: ID {
+                trello_id: Some(board_id),
+                local_id: None,
+            },
+            name: list_name,
+        };
+
+        Ok(list)
+    }
+
     fn parse_card_from_json(card_json: &Value) -> Result<Card, Box<dyn std::error::Error>> {
         let card_object = card_json.as_object().unwrap();
         let trello_id = Some(String::from(
@@ -352,25 +375,7 @@ impl DataStore for TrelloDataStore {
 
         let mut result: Vec<BoardList> = Vec::new();
         for list_json in lists.as_array().unwrap() {
-
-            let list_object = list_json.as_object().unwrap();
-            let trello_id = Some(String::from(
-                list_object.get("id").unwrap().as_str().unwrap(),
-            ));
-            let list_name = String::from(list_object.get("name").unwrap().as_str().unwrap());
-            let id_board = String::from(list_object.get("idBoard").unwrap().as_str().unwrap());
-            let list = BoardList {
-                id: ID {
-                    trello_id: trello_id,
-                    local_id: None,
-                },
-                name: list_name,
-                board_id: ID {
-                    trello_id: Some(id_board),
-                    local_id: None,
-                }
-            };
-
+            let list: BoardList = TrelloDataStore::parse_list_from_json(&list_json)?;
             result.push(list);
         }
 
@@ -395,26 +400,7 @@ impl DataStore for TrelloDataStore {
         let response = client.post(&full_url).send().await?;
         let response_text = response.text().await?;
         let list_json: Value = serde_json::from_str(&response_text)?;
-        let list_object = list_json.as_object().unwrap();
-        let trello_id = Some(String::from(
-            list_object.get("id").unwrap().as_str().unwrap(),
-        ));
-        let board_id = String::from(list_object.get("idBoard").unwrap().as_str().unwrap());
-        let list_name = String::from(list_object.get("name").unwrap().as_str().unwrap());
-
-        let list = BoardList {
-            id: ID {
-                trello_id: trello_id,
-                local_id: None,
-            },
-            board_id: ID {
-                trello_id: Some(board_id),
-                local_id: None,
-            },
-            name: list_name,
-        };
-
-        Ok(list)
+        TrelloDataStore::parse_list_from_json(&list_json)
     }
 
     async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
