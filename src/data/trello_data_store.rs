@@ -41,6 +41,28 @@ impl TrelloDataStore {
         }
     }
 
+    fn parse_label_from_json(label_json: &Value) -> Result<CardLabel, Box<dyn std::error::Error>> {
+        let label_object = label_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            label_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let board_id = String::from(label_object.get("idBoard").unwrap().as_str().unwrap());
+        let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
+        let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
+
+        let label = CardLabel {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            board_id: String::from(board_id),
+            name: label_name,
+            color: label_color,
+        };
+
+        Ok(label)
+    }
+
     fn parse_list_from_json(list_json: &Value) -> Result<BoardList, Box<dyn std::error::Error>> {
         let list_object = list_json.as_object().unwrap();
         let trello_id = Some(String::from(
@@ -217,23 +239,8 @@ impl DataStore for TrelloDataStore {
         let labels: Value = serde_json::from_str(&trello_response)?;
 
         let mut result: Vec<CardLabel> = Vec::new();
-        for labels_json in labels.as_array().unwrap() {
-            let label_object = labels_json.as_object().unwrap();
-            let trello_id = Some(String::from(
-                label_object.get("id").unwrap().as_str().unwrap(),
-            ));
-            let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
-            let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
-
-            let label = CardLabel {
-                id: ID {
-                    trello_id: trello_id,
-                    local_id: None,
-                },
-                board_id: String::from(board_id),
-                name: label_name,
-                color: label_color,
-            };
+        for label_json in labels.as_array().unwrap() {
+            let label: CardLabel = TrelloDataStore::parse_label_from_json(&label_json)?;
             result.push(label);
         }
 
@@ -291,25 +298,7 @@ impl DataStore for TrelloDataStore {
         let response = client.put(&full_url).send().await?;
         let response_text = response.text().await?;
         let label_json: Value = serde_json::from_str(&response_text)?;
-        let label_object = label_json.as_object().unwrap();
-        let trello_id = Some(String::from(
-            label_object.get("id").unwrap().as_str().unwrap(),
-        ));
-        let board_id = String::from(label_object.get("idBoard").unwrap().as_str().unwrap());
-        let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
-        let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
-
-        let label = CardLabel {
-            id: ID {
-                trello_id: trello_id,
-                local_id: None,
-            },
-            board_id: String::from(board_id),
-            name: label_name,
-            color: label_color,
-        };
-
-        Ok(label)
+        TrelloDataStore::parse_label_from_json(&label_json)
     }
 
     async fn create_board_label(
@@ -335,25 +324,7 @@ impl DataStore for TrelloDataStore {
         let response = client.post(&full_url).send().await?;
         let response_text = response.text().await?;
         let label_json: Value = serde_json::from_str(&response_text)?;
-        let label_object = label_json.as_object().unwrap();
-        let trello_id = Some(String::from(
-            label_object.get("id").unwrap().as_str().unwrap(),
-        ));
-        let board_id = String::from(label_object.get("idBoard").unwrap().as_str().unwrap());
-        let label_name = String::from(label_object.get("name").unwrap().as_str().unwrap());
-        let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
-
-        let label = CardLabel {
-            id: ID {
-                trello_id: trello_id,
-                local_id: None,
-            },
-            board_id: String::from(board_id),
-            name: label_name,
-            color: label_color,
-        };
-
-        Ok(label)
+        TrelloDataStore::parse_label_from_json(&label_json)
     }
 
     async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
