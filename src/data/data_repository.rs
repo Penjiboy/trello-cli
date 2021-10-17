@@ -377,6 +377,23 @@ impl DataRepository {
             }
         }
     }
+
+    pub async fn create_list_card(&mut self, list: Option<BoardList>, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
+        let list_id: String;
+
+        if list.is_none() && self.active_boardlist.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No list has been selected. Unable to infer which list's card to create"))}));
+        } else {
+            list_id = if list.is_some() {
+                self.active_boardlist.replace(list.unwrap().clone());
+                self.active_boardlist.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_boardlist.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+        self.invalidate_caches(false, true, true, false);
+        TrelloDataStore::create_list_card(&list_id, name).await
+    }
 }
 
 #[async_trait]
@@ -395,4 +412,5 @@ pub trait DataStore {
     async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>>;
 
     async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>>;
+    async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>>;
 }

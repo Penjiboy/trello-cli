@@ -67,7 +67,7 @@ impl InteractiveCli {
                         let labels: Vec<CardLabel> = labels_result.result.unwrap();
                         println!("Labels: ");
                         for label in labels {
-                            println!("{name}: {color}", name = label.name, color = label.color);
+                            println!("  {name}: {color}", name = label.name, color = label.color);
                         }
                     }
 
@@ -176,7 +176,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "get-cards", "help"];
+        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "get-cards", "create-card <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -235,6 +235,18 @@ impl InteractiveCli {
                     }
                 }
 
+            }
+
+            "create-card" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let card_name = remainder.join(" ");
+                if card_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card_result = self.command_exec.create_list_card(None, &card_name).await;
+                    println!("{}", card_result.result_string.unwrap());
+                }
             }
 
             _ => {

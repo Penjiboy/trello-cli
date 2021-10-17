@@ -292,5 +292,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn create_list_card(&mut self, list: Option<BoardList>, name: &str) -> CommandResult<Card> {
+            let card_result = self.board_service.create_list_card(list, name).await;
+            let command_result: CommandResult<Card> = match card_result {
+                Ok(card) => {
+                    let res_string = format!("Created card");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(card),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }
