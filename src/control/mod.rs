@@ -314,5 +314,36 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn select_list_card(&mut self, name: &str, list: Option<BoardList>) -> CommandResult<Card> {
+            let card_result = self.board_service.select_list_card(name, list).await;
+            let command_result: CommandResult<Card> = match card_result {
+                Ok(card) => {
+                    if card.is_some() {
+                        let _card = card.unwrap();
+                        let res_string = format!("Selected card {}", _card.name);
+                        CommandResult {
+                            result_code: CommandResultCode::Success,
+                            result: Some(_card),
+                            result_string: Some(res_string),
+                        }
+                    } else {
+                        CommandResult {
+                            result_code: CommandResultCode::Failed,
+                            result: None,
+                            result_string: Some(String::from("Failed to select card")),
+                        }
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string())),
+                },
+            };
+
+            command_result
+        }
     }
 }
