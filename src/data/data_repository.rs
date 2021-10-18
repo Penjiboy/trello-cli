@@ -422,6 +422,11 @@ impl DataRepository {
         self.invalidate_caches(true, true, true, true);
         Ok(result_card)
     }
+
+    pub async fn update_card(&mut self, card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
+        self.invalidate_caches(false, true, false, false);
+        TrelloDataStore::update_card(card).await
+    }
 }
 
 #[async_trait]
@@ -441,4 +446,5 @@ pub trait DataStore {
 
     async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>>;
     async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>>;
+    async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>>;
 }

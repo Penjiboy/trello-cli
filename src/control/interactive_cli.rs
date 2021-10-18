@@ -272,6 +272,52 @@ impl InteractiveCli {
             }
         }
     }
+
+    async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["get-description", "edit-description", "help"];
+        match input_iter.next().unwrap_or("") {
+            "help" => self.print_available_commands(&available_commands),
+
+            "get-description" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card: Card = self.current_card.clone().unwrap();
+                    println!("Card Description:\n{}", card.description);
+                }
+            }
+
+            "edit-description" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let mut card: Card = self.current_card.clone().unwrap();
+                    let remainder: Vec<&str> = input_iter.collect();
+                    let description = remainder.join(" ");
+                    if description.is_empty() {
+                        self.print_invalid_command(Some(String::from("You must provide a description")));
+                        self.print_available_commands(&available_commands);
+                    } else {
+                        card.description = description;
+                        let card_result = self.command_exec.update_card(&card).await;
+                        println!("{}", card_result.result_string.unwrap());
+                        if let CommandResultCode::Success = card_result.result_code {
+                            self.current_card.replace(card_result.result.unwrap());
+                        }
+                    }
+                }
+            }
+
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
+            }
+
+        }
+
+    }
 }
 
 pub async fn run() {
@@ -284,7 +330,7 @@ pub async fn run() {
         current_checklist: None,
     };
 
-    let available_commands = vec!["board", "label", "list", "exit", "help"];
+    let available_commands = vec!["board", "label", "list", "card", "exit", "help"];
 
     loop {
         cli.print_prompt();
@@ -319,6 +365,10 @@ pub async fn run() {
 
             "list" => {
                 cli.handle_list_command(input_iter).await;
+            }
+
+            "card" => {
+                cli.handle_card_command(input_iter).await;
             }
             _ => {
                 cli.print_invalid_command(None);

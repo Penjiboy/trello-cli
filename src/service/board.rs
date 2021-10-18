@@ -62,4 +62,8 @@ impl BoardService {
     pub async fn select_list_card(&mut self, name: &str, list: Option<BoardList>) -> Result<Option<Card>, Box<dyn std::error::Error>> {
         self.data_repo.select_list_card(name, list).await
     }
+
+    pub async fn update_card(&mut self, card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
+        self.data_repo.update_card(card).await
+    }
 }

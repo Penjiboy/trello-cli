@@ -103,6 +103,10 @@ impl DataStore for MongoDataStore {
     async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {

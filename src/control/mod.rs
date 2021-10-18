@@ -345,5 +345,27 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn update_card(&mut self, card: &Card) -> CommandResult<Card> {
+            let card_result = self.board_service.update_card(card).await;
+            let command_result: CommandResult<Card> = match card_result {
+                Ok(card) => {
+                    let res_string = format!("Updated card");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(card),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

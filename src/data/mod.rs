@@ -24,7 +24,7 @@ pub struct CardComment {
     pub id: ID,
     pub text: String,
     pub commenter_name: String,
-    pub comment_time_instant_ms: i16, // milliseconds of an instant
+    pub comment_time_instant_seconds: i64, // seconds of an instant
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -46,7 +46,7 @@ pub struct Card {
     pub id: ID,
     pub name: String,
     pub description: String,
-    pub due_date_instant_ms: i16,
+    pub due_date_instant_seconds: i64,
     pub due_complete: bool,
     pub label_ids: Vec<ID>,
     pub checklists_ids: Vec<ID>,
@@ -56,7 +56,7 @@ pub struct Card {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardDueDate {
     pub card: Card,
-    pub due_date_instant_ms: i16,
+    pub due_date_instant_seconds: i64,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

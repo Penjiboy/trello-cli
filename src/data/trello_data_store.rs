@@ -2,13 +2,14 @@ use std::fs::File;
 use std::io::Read;
 use std::sync::Once;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 use crate::data::data_repository::DataStore;
 use crate::data::*;
 
 use async_trait::async_trait;
 use reqwest;
-use serde_json::{Map, Value};
+use serde_json::{Map, Value, json};
 use datetime;
 
 static START: Once = Once::new();
@@ -132,11 +133,11 @@ impl TrelloDataStore {
         let due_complete: bool = card_object.get("dueComplete").unwrap().as_bool().unwrap();
 
         let due_string: Option<&str> = card_object.get("due").unwrap().as_str();
-        let due_instant_ms: i16 = if due_string.is_none() {
+        let due_instant_seconds: i64 = if due_string.is_none() {
             0
         } else {
             let due_datetime: datetime::LocalDateTime = datetime::LocalDateTime::from_str(due_string.unwrap())?;
-            due_datetime.to_instant().milliseconds()
+            due_datetime.to_instant().seconds()
         };
 
         let card = Card {
@@ -147,7 +148,7 @@ impl TrelloDataStore {
             name: card_name,
             description: description,
             due_complete: due_complete,
-            due_date_instant_ms: due_instant_ms,
+            due_date_instant_seconds: due_instant_seconds,
             list_id: ID {
                 trello_id: Some(id_list),
                 local_id: None,
@@ -408,6 +409,33 @@ impl DataStore for TrelloDataStore {
         let response_text = response.text().await?;
         let card_json: Value = serde_json::from_str(&response_text)?;
 
+        TrelloDataStore::parse_card_from_json(&card_json)
+    }
+
+    async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{id}?key={key}&token={token}",
+                id = card.id.trello_id.clone().unwrap(),
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let request_body = json!({
+            "desc": card.description.clone(),
+            "idList": card.list_id.trello_id.clone().unwrap(),
+            "name": card.name.clone(),
+            "dueComplete": card.due_complete
+        });
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.put(&full_url).json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        let card_json: Value = serde_json::from_str(&response_text)?;
         TrelloDataStore::parse_card_from_json(&card_json)
     }
 }
