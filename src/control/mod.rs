@@ -367,5 +367,32 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn move_card_to_list(&mut self, mut card: Card, list_name: &str) -> CommandResult<Card> {
+            // Get the list (more importantly the list ID)
+            let list_result: CommandResult<Vec<BoardList>> = self.get_all_board_lists(None).await;
+            let mut list_id: Option<ID> = None;
+            if let CommandResultCode::Success = list_result.result_code {
+               let lists: Vec<BoardList> = list_result.result.unwrap();
+               for list in lists {
+                   if list.name.eq_ignore_ascii_case(list_name) {
+                       list_id = Some(list.id);
+                       break;
+                   }
+               }
+            } 
+
+            if list_id.is_none() {
+                return CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(format!("Failed to get the target list"))
+                };
+            } else {
+                // Update the card
+                card.list_id = list_id.unwrap();
+                return self.update_card(&card).await;
+            }
+        }
     }
 }
