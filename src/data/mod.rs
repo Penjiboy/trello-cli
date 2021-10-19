@@ -95,3 +95,25 @@ impl std::fmt::Display for InvalidInputError {
         write!(f, "Invalid Input! {}", self.message.as_ref().unwrap_or(&String::from("")))
     }
 }
+
+impl PartialEq for ID {
+    fn eq(&self, other: &Self) -> bool {
+        let local_ids_match = if self.local_id.is_none() {
+            other.local_id.is_none()
+        } else if other.local_id.is_none() {
+            false
+        } else {
+            self.local_id.as_ref().unwrap().eq_ignore_ascii_case(&other.local_id.as_ref().unwrap())
+        };
+
+        let trello_ids_match = if self.trello_id.is_none() {
+            other.trello_id.is_none()
+        } else if other.trello_id.is_none() {
+            false
+        } else {
+            self.trello_id.as_ref().unwrap().eq_ignore_ascii_case(&other.trello_id.as_ref().unwrap())
+        };
+
+        local_ids_match && trello_ids_match
+    }
+}

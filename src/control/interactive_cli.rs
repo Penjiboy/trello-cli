@@ -158,6 +158,8 @@ impl InteractiveCli {
                 println!("{}", board_result.result_string.unwrap());
                 if let CommandResultCode::Success = board_result.result_code {
                     self.current_board.replace(board_result.result.unwrap());
+                    self.current_list.take();
+                    self.current_card.take();
                 }
             }
 
@@ -209,6 +211,7 @@ impl InteractiveCli {
                     println!("{}", list_result.result_string.unwrap());
                     if let CommandResultCode::Success = list_result.result_code {
                         self.current_list.replace(list_result.result.unwrap());
+                        self.current_card.take();
                     }
                 }
             }
@@ -274,7 +277,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-description", "edit-description", "move-to-list <ListName>", "help"];
+        let available_commands = vec!["get-description", "edit-description", "move-to-list <ListName>", "get-labels", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -328,6 +331,24 @@ impl InteractiveCli {
                             self.current_card.replace(card_result.result.unwrap());
                             let list_result = self.command_exec.select_board_list(&list_name, None).await;
                             self.current_list.replace(list_result.result.unwrap());
+                        }
+                    }
+                }
+
+            }
+
+            "get-labels" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card = self.current_card.clone().unwrap();
+                    let labels_result = self.command_exec.get_card_labels(&card).await;
+                    println!("{}", labels_result.result_string.unwrap());
+                    if let CommandResultCode::Success = labels_result.result_code {
+                        let labels: Vec<CardLabel> = labels_result.result.unwrap();
+                        for label in labels {
+                            println!("  {name}: {color}", name = label.name, color = label.color);
                         }
                     }
                 }

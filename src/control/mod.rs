@@ -394,5 +394,24 @@ pub mod command_executor {
                 return self.update_card(&card).await;
             }
         }
+
+        pub async fn get_card_labels(&mut self, card: &Card) -> CommandResult<Vec<CardLabel>> {
+            let all_labels_result: CommandResult<Vec<CardLabel>> = self.get_all_board_labels(None).await;
+            if let CommandResultCode::Success = all_labels_result.result_code {
+                let mut all_labels: Vec<CardLabel> = all_labels_result.result.unwrap();
+                all_labels.retain(|label| card.label_ids.contains(&label.id));
+                return CommandResult {
+                    result_code: CommandResultCode::Success,
+                    result: Some(all_labels),
+                    result_string: Some(format!("Retrieved card label(s)"))
+                }
+            } else {
+                return CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(format!("Failed to get card labels"))
+                }
+            }
+        }
     }
 }
