@@ -423,11 +423,14 @@ impl DataStore for TrelloDataStore {
             );
         }
 
+        let label_trello_ids = card.label_ids.iter().map(|id| id.trello_id.clone().unwrap_or("".to_string())).collect::<Vec<_>>();
+
         let request_body = json!({
             "desc": card.description.clone(),
             "idList": card.list_id.trello_id.clone().unwrap(),
             "name": card.name.clone(),
-            "dueComplete": card.due_complete
+            "dueComplete": card.due_complete,
+            "idLabels": label_trello_ids
         });
 
         let mut full_url = String::from(URL_BASE);

@@ -413,5 +413,36 @@ pub mod command_executor {
                 }
             }
         }
+
+        pub async fn add_card_label(&mut self, mut card: Card, label_name: &str) -> CommandResult<Card> {
+            let labels_result = self.get_all_board_labels(None).await;
+            if let CommandResultCode::Success = labels_result.result_code {
+                let card_labels: Vec<CardLabel> = labels_result.result.unwrap();
+                let mut chosen_label: Option<CardLabel> = None;
+                for label in card_labels {
+                    if label.name.eq_ignore_ascii_case(label_name) {
+                        chosen_label = Some(label);
+                        break;
+                    }
+                }
+
+                if chosen_label.is_some() {
+                    card.label_ids.push(chosen_label.unwrap().id);
+                    return self.update_card(&card).await;
+                } else {
+                    return CommandResult {
+                        result_code: CommandResultCode::Failed,
+                        result: None,
+                        result_string: Some(format!("Could not find a board label with the given name"))
+                    };
+                }
+            } else {
+                return CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(format!("Failed to get board labels"))
+                };
+            }
+        }
     }
 }
