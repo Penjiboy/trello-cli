@@ -178,7 +178,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "get-cards", "create-card <Name>", "select-card <Name>", "help"];
+        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -228,19 +228,19 @@ impl InteractiveCli {
                 }
             }
 
-            "get-cards" => {
-                let cards_result = self.command_exec.get_all_list_cards(None).await;
-                println!("{}", cards_result.result_string.unwrap());
-                if let CommandResultCode::Success = cards_result.result_code {
-                    println!("Cards:");
-                    for card in cards_result.result.unwrap() {
-                        println!("  - {}", card.name);
-                    }
-                }
-
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
             }
+        }
+    }
 
-            "create-card" => {
+    async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "help"];
+        match input_iter.next().unwrap_or("") {
+            "help" => self.print_available_commands(&available_commands),
+
+            "create" => {
                 let remainder: Vec<&str> = input_iter.collect();
                 let card_name = remainder.join(" ");
                 if card_name.is_empty() {
@@ -252,7 +252,8 @@ impl InteractiveCli {
                 }
             }
 
-            "select-card" => {
+
+            "select" => {
                 let remainder: Vec<&str> = input_iter.collect();
                 let card_name = remainder.join(" ");
                 if card_name.is_empty() {
@@ -269,17 +270,18 @@ impl InteractiveCli {
                 }
             }
 
-            _ => {
-                self.print_invalid_command(None);
-                self.print_available_commands(&available_commands);
-            }
-        }
-    }
+            "get-all" => {
+                let cards_result = self.command_exec.get_all_list_cards(None).await;
+                println!("{}", cards_result.result_string.unwrap());
+                if let CommandResultCode::Success = cards_result.result_code {
+                    println!("Cards:");
+                    for card in cards_result.result.unwrap() {
+                        println!("  - {}", card.name);
+                    }
+                }
 
-    async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "help"];
-        match input_iter.next().unwrap_or("") {
-            "help" => self.print_available_commands(&available_commands),
+            }
+
 
             "get-description" => {
                 if self.current_card.is_none() {
