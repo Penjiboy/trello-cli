@@ -11,6 +11,7 @@ use async_trait::async_trait;
 use reqwest;
 use serde_json::{Map, Value, json};
 use datetime;
+use datetime::{DatePiece, TimePiece, ISO};
 
 static START: Once = Once::new();
 
@@ -424,13 +425,28 @@ impl DataStore for TrelloDataStore {
         }
 
         let label_trello_ids = card.label_ids.iter().map(|id| id.trello_id.clone().unwrap_or("".to_string())).collect::<Vec<_>>();
+        let due_date: Option<datetime::LocalDateTime> = if card.due_date_instant_seconds == 0 {
+            None
+        } else {
+            Some(datetime::LocalDateTime::at(card.due_date_instant_seconds))
+        };
+
+        let due_string: Value = if due_date.is_some() {
+            let due_datetime = due_date.unwrap();
+            let due_iso = due_datetime.iso();
+            Value::String(due_iso.to_string())
+        } else {
+            Value::Null
+        };
 
         let request_body = json!({
             "desc": card.description.clone(),
             "idList": card.list_id.trello_id.clone().unwrap(),
             "name": card.name.clone(),
             "dueComplete": card.due_complete,
-            "idLabels": label_trello_ids
+            "idLabels": label_trello_ids,
+            "due": due_string,
+            "dueComplete": card.due_complete
         });
 
         let mut full_url = String::from(URL_BASE);
