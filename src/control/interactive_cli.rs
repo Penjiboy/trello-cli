@@ -3,6 +3,9 @@ use crate::control::*;
 use crate::data::*;
 
 use std::io::{self, Write};
+use std::str::FromStr;
+
+use chrono::{DateTime, TimeZone, Utc, Local};
 
 struct InteractiveCli {
     command_exec: CommandExecutor,
@@ -236,7 +239,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -399,6 +402,22 @@ impl InteractiveCli {
                     }
                 }
 
+            }
+
+            "get-due-date" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card: Card = self.current_card.clone().unwrap();
+                    let due_date: String = if card.due_date_instant_seconds == 0 {
+                        "No Due Date".to_string()
+                    } else {
+                        let datetime = Local.timestamp(card.due_date_instant_seconds, 0);
+                        format!("  {}\n  {}", datetime.to_rfc2822(), datetime.to_rfc3339())
+                    };
+                    println!("Card Due:\n{}", due_date);
+                }
             }
 
             _ => {
