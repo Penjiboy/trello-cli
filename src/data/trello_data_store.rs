@@ -10,8 +10,7 @@ use crate::data::*;
 use async_trait::async_trait;
 use reqwest;
 use serde_json::{Map, Value, json};
-use datetime;
-use datetime::{DatePiece, TimePiece, ISO};
+use chrono::{DateTime, TimeZone, Utc, Local};
 
 static START: Once = Once::new();
 
@@ -137,8 +136,8 @@ impl TrelloDataStore {
         let due_instant_seconds: i64 = if due_string.is_none() {
             0
         } else {
-            let due_datetime: datetime::LocalDateTime = datetime::LocalDateTime::from_str(due_string.unwrap())?;
-            due_datetime.to_instant().seconds()
+            let due_datetime: DateTime<Utc> = due_string.unwrap().parse::<DateTime<Utc>>().unwrap();
+            due_datetime.timestamp()
         };
 
         let card = Card {
@@ -425,16 +424,15 @@ impl DataStore for TrelloDataStore {
         }
 
         let label_trello_ids = card.label_ids.iter().map(|id| id.trello_id.clone().unwrap_or("".to_string())).collect::<Vec<_>>();
-        let due_date: Option<datetime::LocalDateTime> = if card.due_date_instant_seconds == 0 {
+        let due_date: Option<DateTime<Utc>> = if card.due_date_instant_seconds == 0 {
             None
         } else {
-            Some(datetime::LocalDateTime::at(card.due_date_instant_seconds))
+            Some(Utc.timestamp(card.due_date_instant_seconds, 0))
         };
 
         let due_string: Value = if due_date.is_some() {
             let due_datetime = due_date.unwrap();
-            let due_iso = due_datetime.iso();
-            Value::String(due_iso.to_string())
+            Value::String(format!("{:?}", due_datetime))
         } else {
             Value::Null
         };
