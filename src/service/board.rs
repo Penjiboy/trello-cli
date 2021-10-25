@@ -70,4 +70,8 @@ impl BoardService {
     pub async fn get_card_comments(&mut self, card: Option<Card>) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
         self.data_repo.get_card_comments(card).await
     }
+
+    pub async fn add_card_comment(&mut self, card: Option<Card>, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+        self.data_repo.add_card_comment(card, text).await
+    }
 }

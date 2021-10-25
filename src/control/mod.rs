@@ -497,5 +497,28 @@ pub mod command_executor {
 
             command_result
         }
+
+        pub async fn add_card_comment(&mut self, card: Option<Card>, text: &str) -> CommandResult<CardComment> {
+            let comment_result = self.board_service.add_card_comment(card, text).await;
+            let command_result: CommandResult<CardComment> = match comment_result {
+                Ok(comment) => {
+                    let res_string = format!("Added comment");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(comment),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+
+        }
     }
 }

@@ -444,6 +444,24 @@ impl DataRepository {
             return TrelloDataStore::get_card_comments(&card_id).await;
         }
     }
+
+    pub async fn add_card_comment(&mut self, card: Option<Card>, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+        let card_id: String;
+
+        if card.is_none() {
+            if self.active_card.is_none() {
+                return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected or provided. Unable to infer which card to add a comment to"))}));
+            } else {
+                card_id = self.active_card.clone().unwrap().id.trello_id.unwrap();
+                return TrelloDataStore::add_card_comment(&card_id, text).await;
+            }
+        } else {
+            card_id = card.clone().unwrap().id.trello_id.unwrap();
+            self.invalidate_caches(true, true, true, true);
+            return TrelloDataStore::add_card_comment(&card_id, text).await;
+        }
+
+    }
 }
 
 #[async_trait]
@@ -465,4 +483,5 @@ pub trait DataStore {
     async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>>;
     async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>>;
     async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>>;
+    async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>>;
 }

@@ -511,6 +511,30 @@ impl DataStore for TrelloDataStore {
 
         Ok(result)
     }
+
+    async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{id}/actions/comments?key={key}&token={token}",
+                id = card_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let request_body = json!({
+            "text": text
+        });
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.post(&full_url).json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        let comment_json: Value = serde_json::from_str(&response_text)?;
+        TrelloDataStore::parse_comment_from_json(&comment_json)
+    }
 }
 
 #[cfg(test)]

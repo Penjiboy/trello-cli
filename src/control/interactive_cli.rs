@@ -239,7 +239,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "get-comments", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description <Text>", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "get-comments", "add-comment <Text>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -466,6 +466,24 @@ impl InteractiveCli {
                             };
                             println!("{name} - {date}\n  {text}\n", date = comment_date, name = comment.commenter_name, text = comment.text);
                         }
+                    }
+                }
+            }
+
+            "add-comment" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card: Card = self.current_card.clone().unwrap();
+                    let remainder: Vec<&str> = input_iter.collect();
+                    let text = remainder.join(" ");
+                    if text.is_empty() {
+                        self.print_invalid_command(Some(String::from("You must provide comment text")));
+                        self.print_available_commands(&available_commands);
+                    } else {
+                        let comment_result = self.command_exec.add_card_comment(Some(card), &text).await;
+                        println!("{}", comment_result.result_string.unwrap());
                     }
                 }
             }

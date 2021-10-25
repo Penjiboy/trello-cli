@@ -111,6 +111,10 @@ impl DataStore for MongoDataStore {
     async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {
