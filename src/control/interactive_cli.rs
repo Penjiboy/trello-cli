@@ -239,7 +239,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -417,6 +417,33 @@ impl InteractiveCli {
                         format!("  {}\n  {}", datetime.to_rfc2822(), datetime.to_rfc3339())
                     };
                     println!("Card Due:\n{}", due_date);
+                }
+            }
+
+            "set-due-date" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let mut card: Card = self.current_card.clone().unwrap();
+                    let remainder: Vec<&str> = input_iter.collect();
+                    let due_string = remainder.join(" ");
+                    if due_string.is_empty() {
+                        self.print_invalid_command(Some(String::from("You must provide a new due date")));
+                        self.print_available_commands(&available_commands);
+                    } else {
+                        let due_datetime: Option<DateTime<Local>> = Local.datetime_from_str(&due_string, "%Y-%m-%d %H:%M:%S").ok();
+                        if due_datetime.is_some() {
+                            card.due_date_instant_seconds = due_datetime.unwrap().timestamp();
+                            let card_result = self.command_exec.update_card(&card).await;
+                            println!("{}", card_result.result_string.unwrap());
+                            if let CommandResultCode::Success = card_result.result_code {
+                                self.current_card.replace(card_result.result.unwrap());
+                            }
+                        } else {
+                            println!("Unable to parse the due date given");
+                        }
+                    }
                 }
             }
 

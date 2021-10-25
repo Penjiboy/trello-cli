@@ -1,28 +1,28 @@
 # Commands
 
 * `board`
-  * `get-all`
-  * `create-new` `{name}` `{workspace}?`
-  * `select` `{name}`
+  * `get-all` :white_check_mark:
+  * `create-new` `{name}` :white_check_mark:
+  * `select` `{name}` :white_check_mark:
 * `label`
-  * `get-all`
-  * `create-new` `{name} {color}`
-  * `delete` `{name}`
-  * `update {name} {color}`
+  * `get-all` :white_check_mark:
+  * `create-new` `{name} {color}` :white_check_mark:
+  * `delete` `{name}` :white_check_mark:
+  * `update {name} {color}`​ :white_check_mark:
 * `list`
-  * `get-all`
-  * `create-new` `{name}`
+  * `get-all` :white_check_mark:
+  * `create-new` `{name}` :white_check_mark:
   * `delete` `{list-name}`
-  * `select` `{name}`
+  * `select` `{name}` :white_check_mark:
     * `card-count`
     * `due-dates`
 * `card`
-  * `get-all`
-  * `create` `{name}`
-  * `select` `{name}`
-    * `get-description`
-    * `edit-description` `{description}`
-    * `move-to-list` `{destination-list-name}`
+  * `get-all` :white_check_mark:
+  * `create` `{name}` :white_check_mark:
+  * `select` `{name}` :white_check_mark:
+    * `get-description` :white_check_mark:
+    * `edit-description` `{description}` :white_check_mark:
+    * `move-to-list` `{destination-list-name}` :white_check_mark:
     * `get-checklists`
     * `create-checklist` `{name}`
     * `select-checklist` `{name}`
@@ -31,8 +31,8 @@
       * `complete-task` `{id}`
     * `get-comments`
     * `add-comment` `{comment}`
-    * `get-labels`
-    * `add-label` `{name}`
-    * `remove-label` `{name}`
-    * `get-due-date`
-    * `set-due-date` `{due-date}`
+    * `get-labels` :white_check_mark:
+    * `add-label` `{name}` :white_check_mark:
+    * `remove-label` `{name}` :white_check_mark:
+    * `get-due-date` :white_check_mark:
+    * `set-due-date` `{due-date}` :white_check_mark:
