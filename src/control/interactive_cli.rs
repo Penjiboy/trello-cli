@@ -239,7 +239,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "get-comments", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -414,9 +414,9 @@ impl InteractiveCli {
                         "No Due Date".to_string()
                     } else {
                         let datetime = Local.timestamp(card.due_date_instant_seconds, 0);
-                        format!("  {}\n  {}", datetime.to_rfc2822(), datetime.to_rfc3339())
+                        format!("{}", datetime.to_rfc2822())
                     };
-                    println!("Card Due:\n{}", due_date);
+                    println!("Card Due:\n  {}", due_date);
                 }
             }
 
@@ -442,6 +442,29 @@ impl InteractiveCli {
                             }
                         } else {
                             println!("Unable to parse the due date given");
+                        }
+                    }
+                }
+            }
+
+            "get-comments" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let card = self.current_card.clone().unwrap();
+                    let comments_result = self.command_exec.get_card_comments(Some(card)).await;
+                    println!("{}", comments_result.result_string.unwrap());
+                    if let CommandResultCode::Success = comments_result.result_code {
+                        let comments: Vec<CardComment> = comments_result.result.unwrap();
+                        for comment in comments {
+                            let comment_date: String = if comment.comment_time_instant_seconds == 0 {
+                                "No Due Date".to_string()
+                            } else {
+                                let datetime = Local.timestamp(comment.comment_time_instant_seconds, 0);
+                                format!("{}", datetime.to_rfc2822())
+                            };
+                            println!("{name} - {date}\n  {text}\n", date = comment_date, name = comment.commenter_name, text = comment.text);
                         }
                     }
                 }

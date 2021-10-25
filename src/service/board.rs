@@ -66,4 +66,8 @@ impl BoardService {
     pub async fn update_card(&mut self, card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
         self.data_repo.update_card(card).await
     }
+
+    pub async fn get_card_comments(&mut self, card: Option<Card>) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
+        self.data_repo.get_card_comments(card).await
+    }
 }

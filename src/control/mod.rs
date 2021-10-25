@@ -475,5 +475,27 @@ pub mod command_executor {
                 };
             }
         }
+
+        pub async fn get_card_comments(&mut self, card: Option<Card>) -> CommandResult<Vec<CardComment>> {
+            let comments_result = self.board_service.get_card_comments(card).await;
+            let command_result: CommandResult<Vec<CardComment>> = match comments_result {
+                Ok(comments) => {
+                    let res_string = format!("Retrieved {} comments", comments.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(comments),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

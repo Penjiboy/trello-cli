@@ -160,6 +160,35 @@ impl TrelloDataStore {
         Ok(card)
 
     }
+
+    fn parse_comment_from_json(comment_json: &Value) -> Result<CardComment, Box<dyn std::error::Error>> {
+        let comment_object = comment_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            comment_object.get("id").unwrap().as_str().unwrap(),
+        ));
+        let date_string: Option<&str> = comment_object.get("date").unwrap().as_str();
+        let date_instant_seconds: i64 = if date_string.is_none() {
+            0
+        } else {
+            let date_datetime: DateTime<Utc> = date_string.unwrap().parse::<DateTime<Utc>>().unwrap();
+            date_datetime.timestamp()
+        };
+
+        let commenter_name: String = comment_object.get("memberCreator").unwrap().as_object().unwrap().get("fullName").unwrap().as_str().unwrap().to_string();
+        let comment_text: String = comment_object.get("data").unwrap().as_object().unwrap().get("text").unwrap().as_str().unwrap().to_string();
+
+        let comment = CardComment {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            commenter_name: commenter_name,
+            text: comment_text,
+            comment_time_instant_seconds: date_instant_seconds
+        };
+
+        Ok(comment)
+    }
 }
 
 #[async_trait]
@@ -454,6 +483,33 @@ impl DataStore for TrelloDataStore {
         let response_text = response.text().await?;
         let card_json: Value = serde_json::from_str(&response_text)?;
         TrelloDataStore::parse_card_from_json(&card_json)
+    }
+
+    async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
+
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{id}/actions?key={key}&token={token}&filter=commentCard",
+                id = card_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let trello_response = reqwest::get(&full_url).await?.text().await?;
+
+        let comments: Value = serde_json::from_str(&trello_response)?;
+
+        let mut result: Vec<CardComment> = Vec::new();
+        for comment_json in comments.as_array().unwrap() {
+            let comment: CardComment = TrelloDataStore::parse_comment_from_json(&comment_json)?;
+            result.push(comment);
+        }
+
+        Ok(result)
     }
 }
 
