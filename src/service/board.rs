@@ -74,4 +74,28 @@ impl BoardService {
     pub async fn add_card_comment(&mut self, card: Option<Card>, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
         self.data_repo.add_card_comment(card, text).await
     }
+
+    pub async fn get_card_checklists(&mut self, card: Option<Card>) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+        self.data_repo.get_card_checklists(card).await
+    }
+
+    pub async fn create_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+        self.data_repo.create_card_checklist(card, name).await
+    }
+
+    pub async fn select_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<Option<CardChecklist>, Box<dyn std::error::Error>> {
+        self.data_repo.select_card_checklist(card, name).await
+    }
+
+    pub async fn get_checklist_tasks(&mut self, checklist: Option<CardChecklist>) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+        self.data_repo.get_checklist_tasks(checklist).await
+    }
+
+    pub async fn create_checklist_task(&mut self, checklist: Option<CardChecklist>, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        self.data_repo.create_checklist_task(checklist, name).await
+    }
+
+    pub async fn update_checklist_task(&mut self, card: Option<Card>, task: CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        self.data_repo.update_checklist_task(card, task).await
+    }
 }
