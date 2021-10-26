@@ -460,7 +460,128 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
             return TrelloDataStore::add_card_comment(&card_id, text).await;
         }
+    }
 
+    pub async fn get_card_checklists(&mut self, card: Option<Card>) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+        let card_id: String;
+
+        if card.is_none() {
+            if self.cache_checklists.is_none() {
+                if self.active_checklist.is_none() {
+                    return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected. Unable to infer which card's checklists to get"))}));
+                } else {
+                    card_id = self.active_checklist.clone().unwrap().id.trello_id.unwrap();
+                }
+            } else {
+                let checklists = self.cache_checklists.clone().unwrap();
+                return Ok(checklists);
+            }
+        } else {
+            card_id = card.clone().unwrap().id.trello_id.unwrap();
+            self.invalidate_caches(true, true, true, true);
+        }
+
+        let checklists_result = TrelloDataStore::get_card_checklists(&card_id).await;
+        match checklists_result {
+            Ok(trello_checklists) => {
+                self.cache_checklists.replace(trello_checklists.clone());
+                Ok(trello_checklists)
+            }
+
+            Err(why) => {
+                Err(why)
+            }
+        }
+    }
+
+    pub async fn create_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+        let card_id: String;
+
+        if card.is_none() && self.active_card.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected. Unable to infer which card's checklist to create"))}));
+        } else {
+            card_id = if card.is_some() {
+                self.active_card.replace(card.unwrap().clone());
+                self.active_card.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_card.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+        self.invalidate_caches(false, false, true, false);
+        TrelloDataStore::create_card_checklist(&card_id, name).await
+    }
+
+    pub async fn select_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<Option<CardChecklist>, Box<dyn std::error::Error>> {
+        let mut checklists: Vec<CardChecklist> = vec![];
+        if self.cache_checklists.is_none() {
+            let checklist_result = self.get_card_checklists(card).await;
+            if let Ok(all_checklists) = checklist_result {
+                checklists = all_checklists;
+            }
+        } else {
+            checklists = self.cache_checklists.clone().unwrap();
+        }
+
+        let mut result_checklist: Option<CardChecklist> = None;
+        for checklist in checklists {
+            if checklist.name.eq_ignore_ascii_case(name) {
+                self.active_checklist.replace(checklist.clone());
+                result_checklist.replace(checklist);
+                break;
+            }
+        }
+
+        self.invalidate_caches(true, true, true, true);
+        Ok(result_checklist)
+    }
+
+    pub async fn get_checklist_tasks(&mut self, checklist: Option<CardChecklist>) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+        let checklist_id: String;
+
+        if checklist.is_none() {
+            if self.active_checklist.is_none() {
+                return Err(Box::new(InvalidInputError { message: Some(String::from("No Checklist has been selected. Unable to infer which checklist's tasks to get"))}));
+            } else {
+                checklist_id = self.active_checklist.clone().unwrap().id.trello_id.unwrap();
+            }
+        } else {
+            checklist_id = checklist.clone().unwrap().id.trello_id.unwrap();
+            self.invalidate_caches(true, true, true, true);
+        }
+
+        TrelloDataStore::get_checklist_tasks(&checklist_id).await
+    }
+
+    pub async fn create_checklist_task(&mut self, checklist: Option<CardChecklist>, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        let checklist_id: String;
+
+        if checklist.is_none() && self.active_checklist.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No checklist has been selected. Unable to infer which checklist's task to create"))}));
+        } else {
+            checklist_id = if checklist.is_some() {
+                self.active_checklist.replace(checklist.unwrap().clone());
+                self.active_checklist.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_checklist.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+        TrelloDataStore::create_checklist_task(&checklist_id, name).await
+    }
+
+    pub async fn update_checklist_task(&mut self, card: Option<Card>, task: CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        let card_id: String;
+
+        if card.is_none() && self.active_card.is_none() {
+            return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected. Unable to infer which card's task to update"))}));
+        } else {
+            card_id = if card.is_some() {
+                self.active_card.replace(card.unwrap().clone());
+                self.active_card.clone().unwrap().id.trello_id.unwrap()
+            } else {
+                self.active_card.clone().unwrap().id.trello_id.unwrap()
+            };
+        }
+        TrelloDataStore::update_checklist_task(&card_id, &task).await
     }
 }
 
