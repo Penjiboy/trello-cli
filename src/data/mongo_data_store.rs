@@ -115,6 +115,26 @@ impl DataStore for MongoDataStore {
     async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
+
+    async fn get_card_checklists(card_id: &str) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
+
+    async fn create_card_checklist(card_id: &str, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
+
+    async fn get_checklist_tasks(checklist_id: &str) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
+
+    async fn create_checklist_task(checklist_id: &str, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
+
+    async fn update_checklist_task(card_id: &str, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        Err(Box::new(NotImplError{}))
+    }
 }
 
 async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {

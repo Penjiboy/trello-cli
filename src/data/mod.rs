@@ -31,13 +31,14 @@ pub struct CardChecklistTask {
     pub id: ID,
     pub name: String,
     pub is_complete: bool,
+    pub checklist_id: ID
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardChecklist {
     pub id: ID,
     pub name: String,
-    pub tasks: Vec<CardChecklistTask>,
+    pub card_id: ID,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

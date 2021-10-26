@@ -189,6 +189,61 @@ impl TrelloDataStore {
 
         Ok(comment)
     }
+
+    fn parse_checklist_from_json(checklist_json: &Value) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+        let checklist_object = checklist_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            checklist_object.get("id").unwrap().as_str().unwrap(),
+        ));
+
+        let name: String = checklist_object.get("name").unwrap().as_str().unwrap().to_string();
+        let card_trello_id = Some(String::from(
+            checklist_object.get("idCard").unwrap().as_str().unwrap(),
+        ));
+
+        let checklist = CardChecklist {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            name: name,
+            card_id: ID {
+                trello_id: card_trello_id,
+                local_id: None
+            },
+        };
+
+        Ok(checklist)
+    }
+
+    fn parse_checklist_task_from_json(checklist_task_json: &Value) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        let checklist_task_object = checklist_task_json.as_object().unwrap();
+        let trello_id = Some(String::from(
+            checklist_task_object.get("id").unwrap().as_str().unwrap(),
+        ));
+
+        let name: String = checklist_task_object.get("name").unwrap().as_str().unwrap().to_string();
+        let checklist_trello_id = Some(String::from(
+            checklist_task_object.get("idChecklist").unwrap().as_str().unwrap(),
+        ));
+        let state: String = checklist_task_object.get("state").unwrap().as_str().unwrap().to_string();
+        let is_complete: bool = state.eq_ignore_ascii_case("complete");
+
+        let checklist_task = CardChecklistTask {
+            id: ID {
+                trello_id: trello_id,
+                local_id: None,
+            },
+            name: name,
+            checklist_id: ID {
+                trello_id: checklist_trello_id,
+                local_id: None
+            },
+            is_complete: is_complete,
+        };
+
+        Ok(checklist_task)
+    }
 }
 
 #[async_trait]
@@ -534,6 +589,138 @@ impl DataStore for TrelloDataStore {
         let response_text = response.text().await?;
         let comment_json: Value = serde_json::from_str(&response_text)?;
         TrelloDataStore::parse_comment_from_json(&comment_json)
+    }
+
+    async fn get_card_checklists(card_id: &str) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{id}/checklists?key={key}&token={token}",
+                id = card_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let trello_response = reqwest::get(&full_url).await?.text().await?;
+
+        let checklists: Value = serde_json::from_str(&trello_response)?;
+
+        let mut result: Vec<CardChecklist> = Vec::new();
+        for checklist_json in checklists.as_array().unwrap() {
+            let checklist: CardChecklist = TrelloDataStore::parse_checklist_from_json(&checklist_json)?;
+            result.push(checklist);
+        }
+
+        Ok(result)
+
+    }
+
+    async fn create_card_checklist(card_id: &str, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{id}/checklists?key={key}&token={token}",
+                id = card_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let request_body = json!({
+            "name": name
+        });
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.post(&full_url).json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        let checklist_json: Value = serde_json::from_str(&response_text)?;
+        TrelloDataStore::parse_checklist_from_json(&checklist_json)
+    }
+
+    async fn get_checklist_tasks(checklist_id: &str) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/checklists/{id}/checkItems?key={key}&token={token}",
+                id = checklist_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let trello_response = reqwest::get(&full_url).await?.text().await?;
+
+        let tasks: Value = serde_json::from_str(&trello_response)?;
+
+        let mut result: Vec<CardChecklistTask> = Vec::new();
+        for task_json in tasks.as_array().unwrap() {
+            let task: CardChecklistTask = TrelloDataStore::parse_checklist_task_from_json(&task_json)?;
+            result.push(task);
+        }
+
+        Ok(result)
+    }
+
+    async fn create_checklist_task(checklist_id: &str, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/checklists/{id}/checkItems?key={key}&token={token}",
+                id = checklist_id,
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let request_body = json!({
+            "name": name
+        });
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.post(&full_url).json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        let task_json: Value = serde_json::from_str(&response_text)?;
+        TrelloDataStore::parse_checklist_task_from_json(&task_json)
+    }
+
+    async fn update_checklist_task(card_id: &str, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        let mut url_path: String = String::from("");
+        unsafe {
+            url_path = format!(
+                "/cards/{card_id}/checkitem/{task_id}?key={key}&token={token}",
+                card_id = card_id,
+                task_id = task.id.trello_id.clone().unwrap(),
+                key = key.clone().unwrap(),
+                token = token.clone().unwrap(),
+            );
+        }
+
+        let state = if task.is_complete {
+            "complete"
+        } else {
+            "incomplete"
+        };
+        let request_body = json!({
+            "name": task.name.clone(),
+            "state": state
+        });
+
+        let mut full_url = String::from(URL_BASE);
+        full_url.push_str(&url_path);
+        let client = reqwest::Client::new();
+        let response = client.put(&full_url).json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        let task_json: Value = serde_json::from_str(&response_text)?;
+        TrelloDataStore::parse_checklist_task_from_json(&task_json)
     }
 }
 
