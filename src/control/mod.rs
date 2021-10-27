@@ -520,5 +520,148 @@ pub mod command_executor {
             command_result
 
         }
+
+        pub async fn get_card_checklists(&mut self, card: Option<Card>) -> CommandResult<Vec<CardChecklist>> {
+            let checklists_result = self.board_service.get_card_checklists(card).await;
+            let command_result: CommandResult<Vec<CardChecklist>> = match checklists_result {
+                Ok(checklists) => {
+                    let res_string = format!("Retrieved {} checklists", checklists.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(checklists),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+
+        }
+
+        pub async fn create_card_checklists(&mut self, card: Option<Card>, name: &str) -> CommandResult<CardChecklist> {
+            let checklist_result = self.board_service.create_card_checklist(card, name).await;
+            let command_result: CommandResult<CardChecklist> = match checklist_result {
+                Ok(checklist) => {
+                    let res_string = format!("Created checklist");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(checklist),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+
+        }
+
+        pub async fn select_card_checklist(&mut self, card: Option<Card>, name: &str) -> CommandResult<CardChecklist> {
+            let checklist_result = self.board_service.select_card_checklist(card, name).await;
+            let command_result: CommandResult<CardChecklist> = match checklist_result {
+                Ok(checklist) => {
+                    if checklist.is_some() {
+                        let _checklist = checklist.unwrap();
+                        let res_string = format!("Selected checklist {}", _checklist.name);
+                        CommandResult {
+                            result_code: CommandResultCode::Success,
+                            result: Some(_checklist),
+                            result_string: Some(res_string),
+                        }
+                    } else {
+                        CommandResult {
+                            result_code: CommandResultCode::Failed,
+                            result: None,
+                            result_string: Some(String::from("Failed to select checklist")),
+                        }
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string())),
+                },
+            };
+
+            command_result
+        }
+
+        pub async fn get_checklist_tasks(&mut self, checklist: Option<CardChecklist>) -> CommandResult<Vec<CardChecklistTask>> {
+            let tasks_result = self.board_service.get_checklist_tasks(checklist).await;
+            let command_result: CommandResult<Vec<CardChecklistTask>> = match tasks_result {
+                Ok(tasks) => {
+                    let res_string = format!("Retrieved {} tasks", tasks.len());
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(tasks),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
+
+        pub async fn create_checklist_task(&mut self, checklist: Option<CardChecklist>, name: &str) -> CommandResult<CardChecklistTask> {
+            let task_result = self.board_service.create_checklist_task(checklist, name).await;
+            let command_result: CommandResult<CardChecklistTask> = match task_result {
+                Ok(task) => {
+                    let res_string = format!("Created task");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(task),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
+
+        pub async fn update_checklist_task(&mut self, card: Option<Card>, task: CardChecklistTask) -> CommandResult<CardChecklistTask> {
+            let task_result = self.board_service.update_checklist_task(card, task).await;
+            let command_result: CommandResult<CardChecklistTask> = match task_result {
+                Ok(task) => {
+                    let res_string = format!("Updated task");
+                    CommandResult {
+                        result_code: CommandResultCode::Success,
+                        result: Some(task),
+                        result_string: Some(res_string)
+                    }
+                }
+
+                Err(why) => CommandResult {
+                    result_code: CommandResultCode::Failed,
+                    result: None,
+                    result_string: Some(String::from(why.to_string()))
+                }
+            };
+
+            command_result
+        }
     }
 }

@@ -467,10 +467,10 @@ impl DataRepository {
 
         if card.is_none() {
             if self.cache_checklists.is_none() {
-                if self.active_checklist.is_none() {
+                if self.active_card.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected. Unable to infer which card's checklists to get"))}));
                 } else {
-                    card_id = self.active_checklist.clone().unwrap().id.trello_id.unwrap();
+                    card_id = self.active_card.clone().unwrap().id.trello_id.unwrap();
                 }
             } else {
                 let checklists = self.cache_checklists.clone().unwrap();

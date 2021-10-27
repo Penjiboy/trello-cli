@@ -23,14 +23,14 @@
     * `get-description` :white_check_mark:
     * `edit-description` `{description}` :white_check_mark:
     * `move-to-list` `{destination-list-name}` :white_check_mark:
-    * `get-checklists`
-    * `create-checklist` `{name}`
-    * `select-checklist` `{name}`
-      * `get-tasks`
-      * `add-task`
-      * `complete-task` `{id}`
-    * `get-comments`
-    * `add-comment` `{comment}`
+    * `get-checklists` :white_check_mark:
+    * `create-checklist` `{name}` :white_check_mark:
+    * `select-checklist` `{name}` :white_check_mark:
+      * `get-tasks` :white_check_mark:
+      * `add-task` :white_check_mark:
+      * `complete-task` `{name}` :white_check_mark:
+    * `get-comments` :white_check_mark:
+    * `add-comment` `{comment}` :white_check_mark:
     * `get-labels` :white_check_mark:
     * `add-label` `{name}` :white_check_mark:
     * `remove-label` `{name}` :white_check_mark:

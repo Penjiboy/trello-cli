@@ -496,6 +496,120 @@ impl InteractiveCli {
         }
 
     }
+
+    async fn handle_checklist_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
+        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "get-tasks", "add-task <Name>", "complete-task <Name>", "help"];
+        match input_iter.next().unwrap_or("") {
+            "help" => self.print_available_commands(&available_commands),
+
+            "get-all" => {
+                let checklists_results = self.command_exec.get_card_checklists(None).await;
+                println!("{}", checklists_results.result_string.unwrap());
+                match checklists_results.result_code {
+                    CommandResultCode::Success => {
+                        let checklists: Vec<CardChecklist> = checklists_results.result.unwrap();
+                        println!("Checklists: ");
+                        for checklist in checklists {
+                            println!("  - {name}", name = checklist.name);
+                        }
+                    }
+
+                    CommandResultCode::Failed => {
+                        println!("Command Failed. Do you have a card selected?");
+                    }
+                }
+            }
+
+            "select" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let checklist_name = remainder.join(" ");
+                if checklist_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let checklist_result = self.command_exec.select_card_checklist(None, &checklist_name).await;
+                    println!("{}", checklist_result.result_string.unwrap());
+                    if let CommandResultCode::Success = checklist_result.result_code {
+                        self.current_checklist.replace(checklist_result.result.unwrap());
+                    }
+                }
+            }
+
+            "create" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let checklist_name = remainder.join(" ");
+                if checklist_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let checklist_result = self.command_exec.create_card_checklists(None, &checklist_name).await;
+                    println!("{}", checklist_result.result_string.unwrap());
+                }
+            }
+
+            "get-tasks" => {
+                let tasks_results = self.command_exec.get_checklist_tasks(None).await;
+                println!("{}", tasks_results.result_string.unwrap());
+                match tasks_results.result_code {
+                    CommandResultCode::Success => {
+                        let tasks: Vec<CardChecklistTask> = tasks_results.result.unwrap();
+                        println!("Tasks: ");
+                        for task in tasks {
+                            let complete = if task.is_complete {
+                                "complete"
+                            } else {
+                                "incomplete"
+                            };
+                            println!("  - [{complete}] {name}", complete = complete, name = task.name);
+                        }
+                    }
+
+                    CommandResultCode::Failed => {
+                        println!("Command Failed. Do you have a checklist selected?");
+                    }
+                }
+            }
+
+            "complete-task" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let task_name = remainder.join(" ");
+                if task_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let tasks_result = self.command_exec.get_checklist_tasks(None).await;
+                    if let CommandResultCode::Success = tasks_result.result_code {
+                        let tasks: Vec<CardChecklistTask> = tasks_result.result.unwrap();
+                        for mut task in tasks {
+                            if task.name.eq_ignore_ascii_case(&task_name) {
+                                task.is_complete = true;
+                                let task_result = self.command_exec.update_checklist_task(None, task).await;
+                                println!("{}", task_result.result_string.unwrap());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            "add-task" => {
+                let remainder: Vec<&str> = input_iter.collect();
+                let task_name = remainder.join(" ");
+                if task_name.is_empty() {
+                    self.print_invalid_command(Some(String::from("You must provide a name")));
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let task_result = self.command_exec.create_checklist_task(None, &task_name).await;
+                    println!("{}", task_result.result_string.unwrap());
+                }
+            }
+
+            _ => {
+                self.print_invalid_command(None);
+                self.print_available_commands(&available_commands);
+            }
+        }
+    }
 }
 
 pub async fn run() {
@@ -508,7 +622,7 @@ pub async fn run() {
         current_checklist: None,
     };
 
-    let available_commands = vec!["board", "label", "list", "card", "exit", "help"];
+    let available_commands = vec!["board", "label", "list", "card", "checklist", "exit", "help"];
 
     loop {
         cli.print_prompt();
@@ -548,6 +662,11 @@ pub async fn run() {
             "card" => {
                 cli.handle_card_command(input_iter).await;
             }
+
+            "checklist" => {
+                cli.handle_checklist_command(input_iter).await;
+            }
+
             _ => {
                 cli.print_invalid_command(None);
                 cli.print_available_commands(&available_commands);
