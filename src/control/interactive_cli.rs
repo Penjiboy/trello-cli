@@ -87,7 +87,7 @@ impl InteractiveCli {
         let available_commands = vec![
             "get-all",
             "create <Label_Name> <Label_Color>",
-            "delete <Label_Name>",
+            "delete [<Label_Name>]",
             "update <Label_Name> <Label_Color>",
             "help",
         ];
@@ -131,7 +131,18 @@ impl InteractiveCli {
 
             "delete" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let label_name = remainder.join(" ");
+                let mut label_name = remainder.join(" ");
+                if label_name.is_empty() {
+                    let labels: Vec<CardLabel> = self.command_exec.get_all_board_labels(None).await.result.unwrap_or(vec![]);
+                    if labels.is_empty() {
+                        println!("Found no labels to select");
+                        return;
+                    } else {
+                        let label_names: Vec<&str> = labels.iter().map(|label| label.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&label_names);
+                        label_name = label_names.get(index).unwrap_or(&"").to_string();
+                    }
+                }
                 let delete_result = self
                     .command_exec
                     .delete_board_label(None, &label_name)
@@ -164,7 +175,7 @@ impl InteractiveCli {
     }
 
     async fn handle_board_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create-new <Name>", "help"];
+        let available_commands = vec!["get-all", "select [<Name>]", "create-new <Name>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -224,7 +235,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "due-dates", "help"];
+        let available_commands = vec!["get-all", "select [<Name>]", "create <Name>", "due-dates", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -248,17 +259,23 @@ impl InteractiveCli {
 
             "select" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let list_name = remainder.join(" ");
+                let mut list_name = remainder.join(" ");
                 if list_name.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide a name")));
-                    self.print_available_commands(&available_commands);
-                } else {
-                    let list_result = self.command_exec.select_board_list(&list_name, None).await;
-                    println!("{}", list_result.result_string.unwrap());
-                    if let CommandResultCode::Success = list_result.result_code {
-                        self.current_list.replace(list_result.result.unwrap());
-                        self.current_card.take();
+                    let lists: Vec<BoardList> = self.command_exec.get_all_board_lists(None).await.result.unwrap_or(vec![]);
+                    if lists.is_empty() {
+                        println!("Found no lists to select");
+                        return;
+                    } else {
+                        let list_names: Vec<&str> = lists.iter().map(|list| list.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&list_names);
+                        list_name = list_names.get(index).unwrap_or(&"").to_string();
                     }
+                }
+                let list_result = self.command_exec.select_board_list(&list_name, None).await;
+                println!("{}", list_result.result_string.unwrap());
+                if let CommandResultCode::Success = list_result.result_code {
+                    self.current_list.replace(list_result.result.unwrap());
+                    self.current_card.take();
                 }
             }
 
@@ -299,7 +316,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select <Name>", "get-description", "edit-description <Text>", "move-to-list <ListName>", "get-labels", "add-label <LabelName>", "remove-label <LabelName>", "get-due-date", "set-due-date yyyy-mm-dd hh:mm:ss", "get-comments", "add-comment <Text>", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select [<Name>]", "get-description", "edit-description <Text>", "move-to-list [<ListName>]", "get-labels", "add-label [<LabelName>]", "remove-label [<LabelName>]", "get-due-date", "set-due-date <yyyy-mm-dd hh:mm:ss>", "get-comments", "add-comment <Text>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -318,18 +335,24 @@ impl InteractiveCli {
 
             "select" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let card_name = remainder.join(" ");
+                let mut card_name = remainder.join(" ");
                 if card_name.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide a name")));
-                    self.print_available_commands(&available_commands);
-                } else {
-                    let card_result = self.command_exec.select_list_card(&card_name, None).await;
-                    println!("{}", card_result.result_string.unwrap());
-                    if let CommandResultCode::Success = card_result.result_code {
-                        self.current_card.replace(card_result.result.unwrap());
-                        let description: String = self.current_card.clone().unwrap().description;
-                        println!("Card Description: \n{}", description);
+                    let cards: Vec<Card> = self.command_exec.get_all_list_cards(None).await.result.unwrap_or(vec![]);
+                    if cards.is_empty() {
+                        println!("Found no cards to select");
+                        return;
+                    } else {
+                        let card_names: Vec<&str> = cards.iter().map(|card| card.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&card_names);
+                        card_name = card_names.get(index).unwrap_or(&"").to_string();
                     }
+                }
+                let card_result = self.command_exec.select_list_card(&card_name, None).await;
+                println!("{}", card_result.result_string.unwrap());
+                if let CommandResultCode::Success = card_result.result_code {
+                    self.current_card.replace(card_result.result.unwrap());
+                    let description: String = self.current_card.clone().unwrap().description;
+                    println!("Card Description: \n{}", description);
                 }
             }
 
@@ -385,18 +408,24 @@ impl InteractiveCli {
                 } else {
                     let card: Card = self.current_card.clone().unwrap();
                     let remainder: Vec<&str> = input_iter.collect();
-                    let list_name = remainder.join(" ");
+                    let mut list_name = remainder.join(" ");
                     if list_name.is_empty() {
-                        self.print_invalid_command(Some(String::from("You must provide a list name")));
-                        self.print_available_commands(&available_commands);
-                    } else {
-                        let card_result = self.command_exec.move_card_to_list(card, &list_name).await;
-                        println!("{}", card_result.result_string.unwrap());
-                        if let CommandResultCode::Success = card_result.result_code {
-                            self.current_card.replace(card_result.result.unwrap());
-                            let list_result = self.command_exec.select_board_list(&list_name, None).await;
-                            self.current_list.replace(list_result.result.unwrap());
+                        let lists: Vec<BoardList> = self.command_exec.get_all_board_lists(None).await.result.unwrap_or(vec![]);
+                        if lists.is_empty() {
+                            println!("Found no lists to move to");
+                            return;
+                        } else {
+                            let list_names: Vec<&str> = lists.iter().map(|list| list.name.as_str()).collect::<Vec<_>>();
+                            let index: usize = self.get_selection_from_prompt(&list_names);
+                            list_name = list_names.get(index).unwrap_or(&"").to_string();
                         }
+                    }
+                    let card_result = self.command_exec.move_card_to_list(card, &list_name).await;
+                    println!("{}", card_result.result_string.unwrap());
+                    if let CommandResultCode::Success = card_result.result_code {
+                        self.current_card.replace(card_result.result.unwrap());
+                        let list_result = self.command_exec.select_board_list(&list_name, None).await;
+                        self.current_list.replace(list_result.result.unwrap());
                     }
                 }
 
@@ -427,16 +456,22 @@ impl InteractiveCli {
                 } else {
                     let card: Card = self.current_card.clone().unwrap();
                     let remainder: Vec<&str> = input_iter.collect();
-                    let label_name = remainder.join(" ");
+                    let mut label_name = remainder.join(" ");
                     if label_name.is_empty() {
-                        self.print_invalid_command(Some(String::from("You must provide a label name")));
-                        self.print_available_commands(&available_commands);
-                    } else {
-                        let card_result = self.command_exec.add_card_label(card, &label_name).await;
-                        println!("{}", card_result.result_string.unwrap());
-                        if let CommandResultCode::Success = card_result.result_code {
-                            self.current_card.replace(card_result.result.unwrap());
+                        let labels: Vec<CardLabel> = self.command_exec.get_all_board_labels(None).await.result.unwrap_or(vec![]);
+                        if labels.is_empty() {
+                            println!("Found no labels to add");
+                            return;
+                        } else {
+                            let label_names: Vec<&str> = labels.iter().map(|label| label.name.as_str()).collect::<Vec<_>>();
+                            let index: usize = self.get_selection_from_prompt(&label_names);
+                            label_name = label_names.get(index).unwrap_or(&"").to_string();
                         }
+                    }
+                    let card_result = self.command_exec.add_card_label(card, &label_name).await;
+                    println!("{}", card_result.result_string.unwrap());
+                    if let CommandResultCode::Success = card_result.result_code {
+                        self.current_card.replace(card_result.result.unwrap());
                     }
                 }
 
@@ -449,16 +484,22 @@ impl InteractiveCli {
                 } else {
                     let card: Card = self.current_card.clone().unwrap();
                     let remainder: Vec<&str> = input_iter.collect();
-                    let label_name = remainder.join(" ");
+                    let mut label_name = remainder.join(" ");
                     if label_name.is_empty() {
-                        self.print_invalid_command(Some(String::from("You must provide a label name")));
-                        self.print_available_commands(&available_commands);
-                    } else {
-                        let card_result = self.command_exec.remove_card_label(card, &label_name).await;
-                        println!("{}", card_result.result_string.unwrap());
-                        if let CommandResultCode::Success = card_result.result_code {
-                            self.current_card.replace(card_result.result.unwrap());
+                        let labels: Vec<CardLabel> = self.command_exec.get_card_labels(&card).await.result.unwrap_or(vec![]);
+                        if labels.is_empty() {
+                            println!("Found no labels to remove");
+                            return;
+                        } else {
+                            let label_names: Vec<&str> = labels.iter().map(|label| label.name.as_str()).collect::<Vec<_>>();
+                            let index: usize = self.get_selection_from_prompt(&label_names);
+                            label_name = label_names.get(index).unwrap_or(&"").to_string();
                         }
+                    }
+                    let card_result = self.command_exec.remove_card_label(card, &label_name).await;
+                    println!("{}", card_result.result_string.unwrap());
+                    if let CommandResultCode::Success = card_result.result_code {
+                        self.current_card.replace(card_result.result.unwrap());
                     }
                 }
 
@@ -558,7 +599,7 @@ impl InteractiveCli {
     }
 
     async fn handle_checklist_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "get-tasks", "add-task <Name>", "complete-task <Name>", "help"];
+        let available_commands = vec!["get-all", "select [<Name>]", "create <Name>", "get-tasks", "add-task <Name>", "complete-task [<Name>]", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -582,16 +623,22 @@ impl InteractiveCli {
 
             "select" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let checklist_name = remainder.join(" ");
+                let mut checklist_name = remainder.join(" ");
                 if checklist_name.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide a name")));
-                    self.print_available_commands(&available_commands);
-                } else {
-                    let checklist_result = self.command_exec.select_card_checklist(None, &checklist_name).await;
-                    println!("{}", checklist_result.result_string.unwrap());
-                    if let CommandResultCode::Success = checklist_result.result_code {
-                        self.current_checklist.replace(checklist_result.result.unwrap());
+                    let checklists: Vec<CardChecklist> = self.command_exec.get_card_checklists(None).await.result.unwrap_or(vec![]);
+                    if checklists.is_empty() {
+                        println!("Found no checklists to select");
+                        return;
+                    } else {
+                        let checklist_names: Vec<&str> = checklists.iter().map(|checklist| checklist.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&checklist_names);
+                        checklist_name = checklist_names.get(index).unwrap_or(&"").to_string();
                     }
+                }
+                let checklist_result = self.command_exec.select_card_checklist(None, &checklist_name).await;
+                println!("{}", checklist_result.result_string.unwrap());
+                if let CommandResultCode::Success = checklist_result.result_code {
+                    self.current_checklist.replace(checklist_result.result.unwrap());
                 }
             }
 
@@ -632,21 +679,27 @@ impl InteractiveCli {
 
             "complete-task" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let task_name = remainder.join(" ");
+                let mut task_name = remainder.join(" ");
                 if task_name.is_empty() {
-                    self.print_invalid_command(Some(String::from("You must provide a name")));
-                    self.print_available_commands(&available_commands);
-                } else {
-                    let tasks_result = self.command_exec.get_checklist_tasks(None).await;
-                    if let CommandResultCode::Success = tasks_result.result_code {
-                        let tasks: Vec<CardChecklistTask> = tasks_result.result.unwrap();
-                        for mut task in tasks {
-                            if task.name.eq_ignore_ascii_case(&task_name) {
-                                task.is_complete = true;
-                                let task_result = self.command_exec.update_checklist_task(None, task).await;
-                                println!("{}", task_result.result_string.unwrap());
-                                break;
-                            }
+                    let tasks: Vec<CardChecklistTask> = self.command_exec.get_checklist_tasks(None).await.result.unwrap_or(vec![]);
+                    if tasks.is_empty() {
+                        println!("Found no tasks to complete");
+                        return;
+                    } else {
+                        let task_names: Vec<&str> = tasks.iter().map(|task| task.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&task_names);
+                        task_name = task_names.get(index).unwrap_or(&"").to_string();
+                    }
+                }
+                let tasks_result = self.command_exec.get_checklist_tasks(None).await;
+                if let CommandResultCode::Success = tasks_result.result_code {
+                    let tasks: Vec<CardChecklistTask> = tasks_result.result.unwrap();
+                    for mut task in tasks {
+                        if task.name.eq_ignore_ascii_case(&task_name) {
+                            task.is_complete = true;
+                            let task_result = self.command_exec.update_checklist_task(None, task).await;
+                            println!("{}", task_result.result_string.unwrap());
+                            break;
                         }
                     }
                 }
