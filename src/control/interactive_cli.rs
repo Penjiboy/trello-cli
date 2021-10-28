@@ -4,6 +4,7 @@ use crate::data::*;
 
 use std::io::{self, Write};
 use std::str::FromStr;
+use std::convert::TryInto;
 
 use chrono::{DateTime, TimeZone, Utc, Local};
 
@@ -48,6 +49,37 @@ impl InteractiveCli {
         println!("Available commands: ");
         for command in commands {
             println!("  {}", command);
+        }
+    }
+
+    fn get_selection_from_prompt(&mut self, names: &Vec<&str>) -> usize {
+        println!("Enter a number to choose one of the following options: ");
+        let mut count: i8 = 0;
+        for name in names {
+            println!("  ({counter})  {name}", counter = count, name = name);
+            count += 1;
+        }
+
+        println!("Your selection (default = 0): ");
+        let mut input = String::new();
+        let read_result = io::stdin().read_line(&mut input);
+        if read_result.is_err() {
+            println!("Error while reading input: {}", read_result.unwrap_err());
+            return 0;
+        } else if input.is_empty() {
+            return 0;
+        } else {
+            let selection = input.trim().parse::<i32>();
+            if selection.is_err() {
+                println!("Invalid input");
+                return 0;
+            } 
+            
+            let mut index: usize = selection.unwrap().try_into().unwrap_or(0);
+            if index > names.len() {
+                index = 0;
+            }
+            return index;
         }
     }
 
@@ -156,7 +188,18 @@ impl InteractiveCli {
 
             "select" => {
                 let remainder: Vec<&str> = input_iter.collect();
-                let board_name = remainder.join(" ");
+                let mut board_name = remainder.join(" ");
+                if board_name.is_empty() {
+                    let boards: Vec<Board> = self.command_exec.get_all_boards().await.result.unwrap_or(vec![]);
+                    if boards.is_empty() {
+                        println!("Found no boards to select");
+                        return;
+                    } else {
+                        let board_names: Vec<&str> = boards.iter().map(|board| board.name.as_str()).collect::<Vec<_>>();
+                        let index: usize = self.get_selection_from_prompt(&board_names);
+                        board_name = board_names.get(index).unwrap_or(&"").to_string();
+                    }
+                }
                 let board_result = self.command_exec.select_board(&board_name).await;
                 println!("{}", board_result.result_string.unwrap());
                 if let CommandResultCode::Success = board_result.result_code {
