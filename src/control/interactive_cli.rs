@@ -3,10 +3,9 @@ use crate::control::*;
 use crate::data::*;
 
 use std::io::{self, Write};
-use std::str::FromStr;
 use std::convert::TryInto;
 
-use chrono::{DateTime, TimeZone, Utc, Local};
+use chrono::{DateTime, TimeZone, Local};
 
 struct InteractiveCli {
     command_exec: CommandExecutor,

@@ -1,16 +1,14 @@
 use std::fs::File;
 use std::io::Read;
 use std::sync::Once;
-use std::str::FromStr;
-use std::collections::HashMap;
 
 use crate::data::data_repository::DataStore;
 use crate::data::*;
 
 use async_trait::async_trait;
 use reqwest;
-use serde_json::{Map, Value, json};
-use chrono::{DateTime, TimeZone, Utc, Local};
+use serde_json::{Value, json};
+use chrono::{DateTime, TimeZone, Utc};
 
 static START: Once = Once::new();
 
@@ -249,7 +247,7 @@ impl TrelloDataStore {
 #[async_trait]
 impl DataStore for TrelloDataStore {
     async fn get_all_boards() -> Result<Vec<Board>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/members/me/boards?key={key}&token={token}",
@@ -274,7 +272,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards?key={key}&token={token}&name={board_name}&defaultLabels=false",
@@ -296,7 +294,7 @@ impl DataStore for TrelloDataStore {
     async fn get_all_board_labels(
         board_id: &str,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{id}/labels?key={key}&token={token}",
@@ -322,7 +320,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/labels/{id}?key={key}&token={token}",
@@ -354,7 +352,7 @@ impl DataStore for TrelloDataStore {
         name: &str,
         color: &str,
     ) -> Result<CardLabel, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/labels/{id}?key={key}&token={token}&name={name}&color={color}",
@@ -380,7 +378,7 @@ impl DataStore for TrelloDataStore {
         name: &str,
         color: &str
     ) -> Result<CardLabel, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{board_id}/labels?key={key}&token={token}&name={name}&color={color}",
@@ -402,7 +400,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{id}/lists?key={key}&token={token}",
@@ -428,7 +426,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{board_id}/lists?key={key}&token={token}&name={name}",
@@ -449,7 +447,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/lists/{id}/cards?key={key}&token={token}",
@@ -497,7 +495,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}?key={key}&token={token}",
@@ -542,7 +540,7 @@ impl DataStore for TrelloDataStore {
 
     async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
 
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/actions?key={key}&token={token}&filter=commentCard",
@@ -568,7 +566,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/actions/comments?key={key}&token={token}",
@@ -592,7 +590,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn get_card_checklists(card_id: &str) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/checklists?key={key}&token={token}",
@@ -619,7 +617,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn create_card_checklist(card_id: &str, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/checklists?key={key}&token={token}",
@@ -643,7 +641,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn get_checklist_tasks(checklist_id: &str) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/checklists/{id}/checkItems?key={key}&token={token}",
@@ -669,7 +667,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn create_checklist_task(checklist_id: &str, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/checklists/{id}/checkItems?key={key}&token={token}",
@@ -693,7 +691,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn update_checklist_task(card_id: &str, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
-        let mut url_path: String = String::from("");
+        let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{card_id}/checkitem/{task_id}?key={key}&token={token}",

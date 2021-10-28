@@ -4,9 +4,7 @@ use crate::data::*;
 
 use async_trait::async_trait;
 
-use std::sync::mpsc;
 use std::sync::Once;
-use std::thread;
 
 static INIT: Once = Once::new();
 
