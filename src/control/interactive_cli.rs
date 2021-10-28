@@ -181,7 +181,7 @@ impl InteractiveCli {
     }
 
     async fn handle_list_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "help"];
+        let available_commands = vec!["get-all", "select <Name>", "create <Name>", "due-dates", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -228,6 +228,23 @@ impl InteractiveCli {
                 } else {
                     let list_result = self.command_exec.create_board_list(None, &list_name).await;
                     println!("{}", list_result.result_string.unwrap());
+                }
+            }
+
+            "due-dates" => {
+                let cards_result = self.command_exec.get_all_list_cards(None).await;
+                println!("{}", cards_result.result_string.unwrap());
+                if let CommandResultCode::Success = cards_result.result_code {
+                    println!("Card Due Dates:");
+                    for card in cards_result.result.unwrap() {
+                        let due_date: String = if card.due_date_instant_seconds == 0 {
+                            "No Due Date".to_string()
+                        } else {
+                            let datetime = Local.timestamp(card.due_date_instant_seconds, 0);
+                            format!("{}", datetime.to_rfc2822())
+                        };
+                        println!("  - {due}\n      {name}\n", due = due_date, name = card.name);
+                    }
                 }
             }
 
