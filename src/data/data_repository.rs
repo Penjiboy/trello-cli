@@ -69,7 +69,8 @@ impl DataRepository {
         match trello_boards_result {
             Ok(trello_boards) => {
                 self.cache_boards = Some(trello_boards.clone());
-                Ok(trello_boards)
+                let synced_boards = MongoDataStore::sync_boards(trello_boards).await?;
+                Ok(synced_boards)
             }
 
             Err(trello_why) => {
@@ -147,14 +148,14 @@ impl DataRepository {
                 if self.active_board.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's labels to get"))}));
                 } else {
-                    board_id = self.active_board.clone().unwrap().id.trello_id.unwrap();
+                    board_id = self.active_board.clone().unwrap()._id.trello_id.unwrap();
                 }
             } else {
                 let labels = self.cache_labels.clone().unwrap();
                 return Ok(labels);
             }
         } else {
-            board_id = board.clone().unwrap().id.trello_id.unwrap();
+            board_id = board.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
         }
 
@@ -181,9 +182,9 @@ impl DataRepository {
         } else {
             board_id = if board.is_some() {
                 self.active_board.replace(board.unwrap().clone());
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             };
         }
 
@@ -195,7 +196,7 @@ impl DataRepository {
 
         for label in labels {
             if label.name.eq_ignore_ascii_case(label_name) && label.board_id.eq_ignore_ascii_case(&board_id) {
-                label_id = Some(label.id.trello_id.unwrap());
+                label_id = Some(label._id.trello_id.unwrap());
                 break;
             }
         }
@@ -218,9 +219,9 @@ impl DataRepository {
         } else {
             board_id = if board.is_some() {
                 self.active_board.replace(board.unwrap().clone());
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             };
         }
 
@@ -232,7 +233,7 @@ impl DataRepository {
 
         for label in labels {
             if (label.name.eq_ignore_ascii_case(name) || label.color.eq_ignore_ascii_case(color)) && label.board_id.eq_ignore_ascii_case(&board_id) {
-                label_id = Some(label.id.trello_id.unwrap());
+                label_id = Some(label._id.trello_id.unwrap());
                 break;
             }
         }
@@ -253,9 +254,9 @@ impl DataRepository {
         } else {
             board_id = if board.is_some() {
                 self.active_board.replace(board.unwrap().clone());
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         self.invalidate_caches(false, true, false, true);
@@ -273,14 +274,14 @@ impl DataRepository {
                 if self.active_board.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's lists to get"))}));
                 } else {
-                    board_id = self.active_board.clone().unwrap().id.trello_id.unwrap();
+                    board_id = self.active_board.clone().unwrap()._id.trello_id.unwrap();
                 }
             } else {
                 let lists = self.cache_boardlists.clone().unwrap();
                 return Ok(lists);
             }
         } else {
-            board_id = board.clone().unwrap().id.trello_id.unwrap();
+            board_id = board.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
         }
 
@@ -305,9 +306,9 @@ impl DataRepository {
         } else {
             board_id = if board.is_some() {
                 self.active_board.replace(board.unwrap().clone());
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_board.clone().unwrap().id.trello_id.unwrap()
+                self.active_board.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         self.invalidate_caches(false, true, true, true);
@@ -352,14 +353,14 @@ impl DataRepository {
                 if self.active_boardlist.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No list has been selected. Unable to infer which list's cards to get"))}));
                 } else {
-                    list_id = self.active_boardlist.clone().unwrap().id.trello_id.unwrap();
+                    list_id = self.active_boardlist.clone().unwrap()._id.trello_id.unwrap();
                 }
             } else {
                 let cards = self.cache_cards.clone().unwrap();
                 return Ok(cards);
             }
         } else {
-            list_id = list.clone().unwrap().id.trello_id.unwrap();
+            list_id = list.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
         }
 
@@ -384,9 +385,9 @@ impl DataRepository {
         } else {
             list_id = if list.is_some() {
                 self.active_boardlist.replace(list.unwrap().clone());
-                self.active_boardlist.clone().unwrap().id.trello_id.unwrap()
+                self.active_boardlist.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_boardlist.clone().unwrap().id.trello_id.unwrap()
+                self.active_boardlist.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         self.invalidate_caches(false, true, true, false);
@@ -433,11 +434,11 @@ impl DataRepository {
             if self.active_card.is_none() {
                 return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected or provided. Unable to infer which card's comments to get"))}));
             } else {
-                card_id = self.active_card.clone().unwrap().id.trello_id.unwrap();
+                card_id = self.active_card.clone().unwrap()._id.trello_id.unwrap();
                 return TrelloDataStore::get_card_comments(&card_id).await;
             }
         } else {
-            card_id = card.clone().unwrap().id.trello_id.unwrap();
+            card_id = card.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
             return TrelloDataStore::get_card_comments(&card_id).await;
         }
@@ -450,11 +451,11 @@ impl DataRepository {
             if self.active_card.is_none() {
                 return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected or provided. Unable to infer which card to add a comment to"))}));
             } else {
-                card_id = self.active_card.clone().unwrap().id.trello_id.unwrap();
+                card_id = self.active_card.clone().unwrap()._id.trello_id.unwrap();
                 return TrelloDataStore::add_card_comment(&card_id, text).await;
             }
         } else {
-            card_id = card.clone().unwrap().id.trello_id.unwrap();
+            card_id = card.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
             return TrelloDataStore::add_card_comment(&card_id, text).await;
         }
@@ -468,14 +469,14 @@ impl DataRepository {
                 if self.active_card.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected. Unable to infer which card's checklists to get"))}));
                 } else {
-                    card_id = self.active_card.clone().unwrap().id.trello_id.unwrap();
+                    card_id = self.active_card.clone().unwrap()._id.trello_id.unwrap();
                 }
             } else {
                 let checklists = self.cache_checklists.clone().unwrap();
                 return Ok(checklists);
             }
         } else {
-            card_id = card.clone().unwrap().id.trello_id.unwrap();
+            card_id = card.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
         }
 
@@ -500,9 +501,9 @@ impl DataRepository {
         } else {
             card_id = if card.is_some() {
                 self.active_card.replace(card.unwrap().clone());
-                self.active_card.clone().unwrap().id.trello_id.unwrap()
+                self.active_card.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_card.clone().unwrap().id.trello_id.unwrap()
+                self.active_card.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         self.invalidate_caches(false, false, true, false);
@@ -540,10 +541,10 @@ impl DataRepository {
             if self.active_checklist.is_none() {
                 return Err(Box::new(InvalidInputError { message: Some(String::from("No Checklist has been selected. Unable to infer which checklist's tasks to get"))}));
             } else {
-                checklist_id = self.active_checklist.clone().unwrap().id.trello_id.unwrap();
+                checklist_id = self.active_checklist.clone().unwrap()._id.trello_id.unwrap();
             }
         } else {
-            checklist_id = checklist.clone().unwrap().id.trello_id.unwrap();
+            checklist_id = checklist.clone().unwrap()._id.trello_id.unwrap();
             self.invalidate_caches(true, true, true, true);
         }
 
@@ -558,9 +559,9 @@ impl DataRepository {
         } else {
             checklist_id = if checklist.is_some() {
                 self.active_checklist.replace(checklist.unwrap().clone());
-                self.active_checklist.clone().unwrap().id.trello_id.unwrap()
+                self.active_checklist.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_checklist.clone().unwrap().id.trello_id.unwrap()
+                self.active_checklist.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         TrelloDataStore::create_checklist_task(&checklist_id, name).await
@@ -574,9 +575,9 @@ impl DataRepository {
         } else {
             card_id = if card.is_some() {
                 self.active_card.replace(card.unwrap().clone());
-                self.active_card.clone().unwrap().id.trello_id.unwrap()
+                self.active_card.clone().unwrap()._id.trello_id.unwrap()
             } else {
-                self.active_card.clone().unwrap().id.trello_id.unwrap()
+                self.active_card.clone().unwrap()._id.trello_id.unwrap()
             };
         }
         TrelloDataStore::update_checklist_task(&card_id, &task).await

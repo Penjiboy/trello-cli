@@ -12,7 +12,7 @@ pub struct ID {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardLabel {
-    pub id: ID,
+    pub _id: ID,
     pub board_id: String,
     pub name: String,
     pub color: String,
@@ -20,7 +20,7 @@ pub struct CardLabel {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardComment {
-    pub id: ID,
+    pub _id: ID,
     pub text: String,
     pub commenter_name: String,
     pub comment_time_instant_seconds: i64, // seconds of an instant
@@ -28,7 +28,7 @@ pub struct CardComment {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardChecklistTask {
-    pub id: ID,
+    pub _id: ID,
     pub name: String,
     pub is_complete: bool,
     pub checklist_id: ID
@@ -36,14 +36,14 @@ pub struct CardChecklistTask {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardChecklist {
-    pub id: ID,
+    pub _id: ID,
     pub name: String,
     pub card_id: ID,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Card {
-    pub id: ID,
+    pub _id: ID,
     pub name: String,
     pub description: String,
     pub due_date_instant_seconds: i64,
@@ -61,14 +61,14 @@ pub struct CardDueDate {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BoardList {
-    pub id: ID,
+    pub _id: ID,
     pub name: String,
     pub board_id: ID,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Board {
-    pub id: ID,
+    pub _id: ID,
     pub name: String,
 }
 

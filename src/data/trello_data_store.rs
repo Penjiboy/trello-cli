@@ -45,7 +45,7 @@ impl TrelloDataStore {
         let trello_id = board_object.get("id").unwrap().as_str().unwrap();
         let board_name = board_object.get("name").unwrap().as_str().unwrap();
         let board = Board {
-            id: ID {
+            _id: ID {
                 trello_id: Some(String::from(trello_id)),
                 local_id: None,
             },
@@ -65,7 +65,7 @@ impl TrelloDataStore {
         let label_color = String::from(label_object.get("color").unwrap().as_str().unwrap());
 
         let label = CardLabel {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -86,7 +86,7 @@ impl TrelloDataStore {
         let list_name = String::from(list_object.get("name").unwrap().as_str().unwrap());
 
         let list = BoardList {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -139,7 +139,7 @@ impl TrelloDataStore {
         };
 
         let card = Card {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -176,7 +176,7 @@ impl TrelloDataStore {
         let comment_text: String = comment_object.get("data").unwrap().as_object().unwrap().get("text").unwrap().as_str().unwrap().to_string();
 
         let comment = CardComment {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -200,7 +200,7 @@ impl TrelloDataStore {
         ));
 
         let checklist = CardChecklist {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -228,7 +228,7 @@ impl TrelloDataStore {
         let is_complete: bool = state.eq_ignore_ascii_case("complete");
 
         let checklist_task = CardChecklistTask {
-            id: ID {
+            _id: ID {
                 trello_id: trello_id,
                 local_id: None,
             },
@@ -499,7 +499,7 @@ impl DataStore for TrelloDataStore {
         unsafe {
             url_path = format!(
                 "/cards/{id}?key={key}&token={token}",
-                id = card.id.trello_id.clone().unwrap(),
+                id = card._id.trello_id.clone().unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -696,7 +696,7 @@ impl DataStore for TrelloDataStore {
             url_path = format!(
                 "/cards/{card_id}/checkitem/{task_id}?key={key}&token={token}",
                 card_id = card_id,
-                task_id = task.id.trello_id.clone().unwrap(),
+                task_id = task._id.trello_id.clone().unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );

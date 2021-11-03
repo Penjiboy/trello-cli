@@ -5,11 +5,12 @@ use async_trait::async_trait;
 use futures::stream::TryStreamExt;
 use mongodb::{
     bson::doc, options::ClientOptions, options::InsertManyOptions, options::UpdateOptions, Client,
-    Collection, Database,
+    Collection, Database, bson::oid, bson::Document
 };
 use serde_json::{Map, Value};
 
 use std::sync::Once;
+use std::collections::HashMap;
 
 static START: Once = Once::new();
 
@@ -38,15 +39,47 @@ impl MongoDataStore {
         });
     }
 
-    pub async fn insert_boards(boards: &Vec<Board>) {
+    pub async fn sync_boards(trello_boards: Vec<Board>) -> Result<Vec<Board>, Box<dyn std::error::Error>> {
         let boards_collection: Collection<Board>;
 
         unsafe {
             boards_collection = db.clone().unwrap().collection::<Board>("boards");
         }
 
-        let insert_options = InsertManyOptions::builder().ordered(Some(false)).build();
-        let insert_result = boards_collection.insert_many(boards, insert_options).await;
+        let mut boards_with_ids: Vec<Board> = vec![];
+        let existing_boards: Vec<Board> = MongoDataStore::get_all_boards().await?;
+        
+        // Maybe create a map of existing_board_by_trello_id and then use the map to help synchronize in the loop?
+        let mut existing_board_by_trello_id: HashMap<String, Board> = HashMap::new();
+
+        for board in existing_boards {
+            existing_board_by_trello_id.insert(board.clone()._id.trello_id.unwrap(), board);
+        }
+
+        for mut board in trello_boards {
+            let existing_board = existing_board_by_trello_id.get(&board._id.trello_id.clone().unwrap());
+            if existing_board.is_some() {
+                board._id.local_id.replace(existing_board.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = board.to_doc::<Board>(true);
+                let update_result = boards_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": board._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                board._id.local_id.replace(object_id.to_hex());
+                let insert_result = boards_collection.insert_one(board.clone(), None).await?;
+            }
+
+            boards_with_ids.push(board);
+        }
+
+        Ok(boards_with_ids)
     }
 }
 
@@ -62,9 +95,6 @@ impl DataStore for MongoDataStore {
             boards = cursor.try_collect().await?;
         }
 
-        for board in &boards {
-            println!("{}", board.name);
-        }
         Ok(boards)
     }
 
@@ -164,4 +194,44 @@ async fn test_mongo_connection() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+trait ToDocument {
+    /**
+     * The `is_update_op` flag will determine how we construct the document. 
+     * If true, then all the fields (except for _id) will be wrapped in a $set object, 
+     * returning a document that can be passed directly into the update command parameter.
+     * 
+     * If false, the returned document will be as if it came from a find operation
+     */
+    fn to_doc<T>(&self, is_update_op: bool) -> Document;
+    fn to_docs<T: ToDocument>(objects: Vec<T>, is_update_op: bool) -> Vec<Document> {
+        let mut result: Vec<Document> = vec![];
+        for object in objects {
+            let doc = object.to_doc::<T>(is_update_op);
+            result.push(doc);
+        }
+
+        result
+    }
+}
+
+impl ToDocument for Board {
+    fn to_doc<Board>(&self, is_update_op: bool) -> Document {
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "name": self.name.clone()
+                }
+            }
+        } else {
+            doc! {
+                "_id": doc! {
+                    "trello_id": self._id.trello_id.clone().unwrap(),
+                    "local_id": self._id.local_id.clone().unwrap()
+                },
+                "name": self.name.clone()
+            }
+        }
+    }
 }

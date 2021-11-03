@@ -374,7 +374,7 @@ pub mod command_executor {
                let lists: Vec<BoardList> = list_result.result.unwrap();
                for list in lists {
                    if list.name.eq_ignore_ascii_case(list_name) {
-                       list_id = Some(list.id);
+                       list_id = Some(list._id);
                        break;
                    }
                }
@@ -397,7 +397,7 @@ pub mod command_executor {
             let all_labels_result: CommandResult<Vec<CardLabel>> = self.get_all_board_labels(None).await;
             if let CommandResultCode::Success = all_labels_result.result_code {
                 let mut all_labels: Vec<CardLabel> = all_labels_result.result.unwrap();
-                all_labels.retain(|label| card.label_ids.contains(&label.id));
+                all_labels.retain(|label| card.label_ids.contains(&label._id));
                 return CommandResult {
                     result_code: CommandResultCode::Success,
                     result: Some(all_labels),
@@ -425,7 +425,7 @@ pub mod command_executor {
                 }
 
                 if chosen_label.is_some() {
-                    card.label_ids.push(chosen_label.unwrap().id);
+                    card.label_ids.push(chosen_label.unwrap()._id);
                     return self.update_card(&card).await;
                 } else {
                     return CommandResult {
@@ -456,7 +456,7 @@ pub mod command_executor {
                 }
 
                 if chosen_label.is_some() {
-                    card.label_ids.retain(|id| id != &chosen_label.as_ref().unwrap().id);
+                    card.label_ids.retain(|id| id != &chosen_label.as_ref().unwrap()._id);
                     return self.update_card(&card).await;
                 } else {
                     return CommandResult {
