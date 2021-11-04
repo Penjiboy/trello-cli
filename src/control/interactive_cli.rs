@@ -315,7 +315,7 @@ impl InteractiveCli {
     }
 
     async fn handle_card_command(&mut self, mut input_iter: std::str::SplitAsciiWhitespace<'_>) {
-        let available_commands = vec!["create <Name>", "get-all", "select [<Name>]", "get-description", "edit-description <Text>", "move-to-list [<ListName>]", "get-labels", "add-label [<LabelName>]", "remove-label [<LabelName>]", "get-due-date", "set-due-date <yyyy-mm-dd hh:mm:ss>", "get-comments", "add-comment <Text>", "help"];
+        let available_commands = vec!["create <Name>", "get-all", "select [<Name>]", "get-description", "edit-description <Text>", "move-to-list [<ListName>]", "get-labels", "add-label [<LabelName>]", "remove-label [<LabelName>]", "get-due-date", "set-due-date <yyyy-mm-dd hh:mm:ss>", "set-due-complete", "get-comments", "add-comment <Text>", "help"];
         match input_iter.next().unwrap_or("") {
             "help" => self.print_available_commands(&available_commands),
 
@@ -543,6 +543,21 @@ impl InteractiveCli {
                         } else {
                             println!("Unable to parse the due date given");
                         }
+                    }
+                }
+            }
+
+            "set-due-complete" => {
+                if self.current_card.is_none() {
+                    println!("No card has been selected");
+                    self.print_available_commands(&available_commands);
+                } else {
+                    let mut card: Card = self.current_card.clone().unwrap();
+                    card.due_complete = true;
+                    let card_result = self.command_exec.update_card(&card).await;
+                    println!("{}", card_result.result_string.unwrap());
+                    if let CommandResultCode::Success = card_result.result_code {
+                        self.current_card.replace(card_result.result.unwrap());
                     }
                 }
             }

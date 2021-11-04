@@ -36,3 +36,4 @@
     * `remove-label` `{name}` :white_check_mark:
     * `get-due-date` :white_check_mark:
     * `set-due-date` `{due-date}` :white_check_mark:
+    * `set-due-complete` :white_check_mark:
