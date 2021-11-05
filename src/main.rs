@@ -3,8 +3,11 @@ extern crate lazy_static;
 use mongodb::{Client, options::ClientOptions };
 use structopt::StructOpt;
 use tokio;
+use serde_json::Value;
 
 use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
 
 mod data;
 mod service;
@@ -19,16 +22,28 @@ struct CliArgs {
     token_file: Option<PathBuf>,
 
     #[structopt(short = "k", long = "key", parse(from_os_str))]
-    key_file: Option<PathBuf>
+    key_file: Option<PathBuf>,
+
+    #[structopt(short = "c", long = "config", parse(from_os_str))]
+    config_file: Option<PathBuf>
 }
 
 #[tokio::main]
 async fn main() {
     let args = CliArgs::from_args();
+    
+    let mut config_object: Option<Value> = None;
+    if args.config_file.is_some() {
+        let path: PathBuf = args.config_file.unwrap();
+        let mut config_file = File::open(path).unwrap();
+        let mut file_content = String::from("");
+        config_file.read_to_string(&mut file_content).unwrap();
+        config_object = Some(serde_json::from_str(&file_content).unwrap());
+    }
 
     if args.interactive {
         // Do something
-        control::interactive_cli::run().await;
+        control::interactive_cli::run(config_object).await;
         return
     }
 

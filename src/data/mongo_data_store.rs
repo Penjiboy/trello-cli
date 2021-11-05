@@ -19,10 +19,19 @@ static mut db: Option<Database> = None;
 pub struct MongoDataStore {}
 
 impl MongoDataStore {
-    pub async fn init() {
+    pub async fn init(config: Option<Value>) {
         // Parse a connection string into an options struct
+        let mut connection_string = String::from("mongodb://root:rootpassword@localhost:32392");
+        if config.is_some() {
+            let config_object = config.as_ref().unwrap().as_object().unwrap();
+            let host = config_object.get("mongodb").unwrap().as_object().unwrap().get("host").unwrap().as_str().unwrap();
+            let port = config_object.get("mongodb").unwrap().as_object().unwrap().get("port").unwrap().as_i64().unwrap();
+            let password = config_object.get("mongodb").unwrap().as_object().unwrap().get("password").unwrap().as_str().unwrap();
+            let username = config_object.get("mongodb").unwrap().as_object().unwrap().get("username").unwrap().as_str().unwrap();
+            connection_string = format!("mongodb://{username}:{password}@{host}:{port}", username = username, password = password, host = host, port = port);
+        }
         let mut client_options =
-            ClientOptions::parse("mongodb://root:rootpassword@localhost:32392")
+            ClientOptions::parse(connection_string)
                 .await
                 .unwrap();
 

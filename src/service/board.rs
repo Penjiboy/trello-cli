@@ -6,8 +6,8 @@ pub struct BoardService {
 }
 
 impl BoardService {
-    pub async fn new() -> BoardService {
-        let dr = DataRepository::new();
+    pub async fn new(config: Option<serde_json::Value>) -> BoardService {
+        let dr = DataRepository::new(config);
         BoardService { data_repo: dr.await.unwrap() }
     }
 

@@ -739,8 +739,8 @@ impl InteractiveCli {
     }
 }
 
-pub async fn run() {
-    let command_exec = CommandExecutor::new().await;
+pub async fn run(config: Option<serde_json::Value>) {
+    let command_exec = CommandExecutor::new(config).await;
     let mut cli = InteractiveCli {
         command_exec: command_exec,
         current_board: None,

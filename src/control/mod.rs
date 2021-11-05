@@ -21,8 +21,8 @@ pub mod command_executor {
     }
 
     impl CommandExecutor {
-        pub async fn new() -> CommandExecutor {
-            let bs = BoardService::new().await;
+        pub async fn new(config: Option<serde_json::Value>) -> CommandExecutor {
+            let bs = BoardService::new(config).await;
             CommandExecutor { board_service: bs }
         }
 

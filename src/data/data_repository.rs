@@ -22,12 +22,12 @@ pub struct DataRepository {
 }
 
 impl DataRepository {
-    pub async fn new() -> Option<DataRepository> {
+    pub async fn new(config: Option<serde_json::Value>) -> Option<DataRepository> {
         let mut dr: Option<DataRepository> = None;
-        MongoDataStore::init().await;
+        MongoDataStore::init(config.clone()).await;
 
         INIT.call_once(|| {
-            TrelloDataStore::init(None, None); // TODO: Change this
+            TrelloDataStore::init(config); // TODO: Change this
 
             dr = Some(DataRepository {
                 active_board: None,

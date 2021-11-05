@@ -23,14 +23,21 @@ static mut token: Option<String> = None;
 pub struct TrelloDataStore {}
 
 impl TrelloDataStore {
-    pub fn init(key_path: Option<String>, token_path: Option<String>) {
-        let mut key_file = File::open(key_path.unwrap_or(PATH_TO_KEY.to_string())).unwrap();
+    pub fn init(config: Option<Value>) {
         let mut _key = String::from("");
-        key_file.read_to_string(&mut _key).unwrap();
-
-        let mut token_file = File::open(token_path.unwrap_or(PATH_TO_TOKEN.to_string())).unwrap();
         let mut _token = String::from("");
-        token_file.read_to_string(&mut _token).unwrap();
+
+        if config.is_some() {
+            let config_object = config.as_ref().unwrap().as_object().unwrap();
+            _key = config_object.get("trello").unwrap().as_object().unwrap().get("developer_api_key").unwrap().as_str().unwrap().to_string();
+            _token = config_object.get("trello").unwrap().as_object().unwrap().get("developer_api_token").unwrap().as_str().unwrap().to_string();
+        } else {
+            let mut key_file = File::open(PATH_TO_KEY.to_string()).unwrap();
+            key_file.read_to_string(&mut _key).unwrap();
+
+            let mut token_file = File::open(PATH_TO_TOKEN.to_string()).unwrap();
+            token_file.read_to_string(&mut _token).unwrap();
+        }
 
         unsafe {
             START.call_once(|| {
