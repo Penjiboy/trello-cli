@@ -13,7 +13,7 @@ pub struct ID {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CardLabel {
     pub _id: ID,
-    pub board_id: String,
+    pub board_id: ID,
     pub name: String,
     pub color: String,
 }

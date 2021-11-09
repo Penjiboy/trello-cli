@@ -112,34 +112,45 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_all_board_labels(board_id: &str) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
+        let labels: Vec<CardLabel>;
+
+        // unsafe {
+        //     let labels_collection: Collection<Board> = db.clone().unwrap().collection::<CardLabel>("labels");
+        //     let cursor = labels_collection.find(doc! {
+        //         "board_id": doc! {
+        //             "trello_id": bo
+        //         }
+        //     })
+        // }
+
         Err(Box::new(NotImplError{}))
     }
 
-    async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn update_board_label(label_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+    async fn update_board_label(label_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn create_board_label(board_id: &str, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+    async fn create_board_label(board_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
+    async fn get_all_board_lists(board_id: ID) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+    async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+    async fn get_all_list_cards(list_id: ID) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
+    async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
@@ -147,31 +158,31 @@ impl DataStore for MongoDataStore {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
+    async fn get_card_comments(card_id: ID) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+    async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_card_checklists(card_id: &str) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+    async fn get_card_checklists(card_id: ID) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn create_card_checklist(card_id: &str, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+    async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_checklist_tasks(checklist_id: &str) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+    async fn get_checklist_tasks(checklist_id: ID) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn create_checklist_task(checklist_id: &str, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn update_checklist_task(card_id: &str, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn update_checklist_task(card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         Err(Box::new(NotImplError{}))
     }
 }

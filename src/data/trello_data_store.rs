@@ -76,7 +76,10 @@ impl TrelloDataStore {
                 trello_id: trello_id,
                 local_id: None,
             },
-            board_id: String::from(board_id),
+            board_id: ID {
+                trello_id: Some(String::from(board_id)),
+                local_id: None
+            },
             name: label_name,
             color: label_color,
         };
@@ -326,12 +329,12 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn delete_board_label(label_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/labels/{id}?key={key}&token={token}",
-                id = label_id,
+                id = label_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -355,7 +358,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn update_board_label(
-        label_id: &str,
+        label_id: ID,
         name: &str,
         color: &str,
     ) -> Result<CardLabel, Box<dyn std::error::Error>> {
@@ -363,7 +366,7 @@ impl DataStore for TrelloDataStore {
         unsafe {
             url_path = format!(
                 "/labels/{id}?key={key}&token={token}&name={name}&color={color}",
-                id = label_id,
+                id = label_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
                 name = name,
@@ -381,7 +384,7 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn create_board_label(
-        board_id: &str,
+        board_id: ID,
         name: &str,
         color: &str
     ) -> Result<CardLabel, Box<dyn std::error::Error>> {
@@ -389,7 +392,7 @@ impl DataStore for TrelloDataStore {
         unsafe {
             url_path = format!(
                 "/boards/{board_id}/labels?key={key}&token={token}&name={name}&color={color}",
-                board_id = board_id,
+                board_id = board_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
                 name = name,
@@ -406,12 +409,12 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_label_from_json(&label_json)
     }
 
-    async fn get_all_board_lists(board_id: &str) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
+    async fn get_all_board_lists(board_id: ID) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{id}/lists?key={key}&token={token}",
-                id = board_id,
+                id = board_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -432,12 +435,12 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_board_list(board_id: &str, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+    async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{board_id}/lists?key={key}&token={token}&name={name}",
-                board_id = board_id,
+                board_id = board_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
                 name = name,
@@ -453,12 +456,12 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_list_from_json(&list_json)
     }
 
-    async fn get_all_list_cards(list_id: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+    async fn get_all_list_cards(list_id: ID) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/lists/{id}/cards?key={key}&token={token}",
-                id = list_id,
+                id = list_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -479,12 +482,12 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_list_card(list_id: &str, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
+    async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/?idList={id}&key={key}&token={token}&name={name}",
-                id = list_id,
+                id = list_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
                 name = name,
@@ -545,13 +548,13 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_card_from_json(&card_json)
     }
 
-    async fn get_card_comments(card_id: &str) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
+    async fn get_card_comments(card_id: ID) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
 
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/actions?key={key}&token={token}&filter=commentCard",
-                id = card_id,
+                id = card_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -572,12 +575,12 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn add_card_comment(card_id: &str, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+    async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/actions/comments?key={key}&token={token}",
-                id = card_id,
+                id = card_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -596,12 +599,12 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_comment_from_json(&comment_json)
     }
 
-    async fn get_card_checklists(card_id: &str) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+    async fn get_card_checklists(card_id: ID) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/checklists?key={key}&token={token}",
-                id = card_id,
+                id = card_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -623,12 +626,12 @@ impl DataStore for TrelloDataStore {
 
     }
 
-    async fn create_card_checklist(card_id: &str, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+    async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{id}/checklists?key={key}&token={token}",
-                id = card_id,
+                id = card_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -647,12 +650,12 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_checklist_from_json(&checklist_json)
     }
 
-    async fn get_checklist_tasks(checklist_id: &str) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+    async fn get_checklist_tasks(checklist_id: ID) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/checklists/{id}/checkItems?key={key}&token={token}",
-                id = checklist_id,
+                id = checklist_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -673,12 +676,12 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_checklist_task(checklist_id: &str, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/checklists/{id}/checkItems?key={key}&token={token}",
-                id = checklist_id,
+                id = checklist_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );
@@ -697,12 +700,12 @@ impl DataStore for TrelloDataStore {
         TrelloDataStore::parse_checklist_task_from_json(&task_json)
     }
 
-    async fn update_checklist_task(card_id: &str, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn update_checklist_task(card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/cards/{card_id}/checkitem/{task_id}?key={key}&token={token}",
-                card_id = card_id,
+                card_id = card_id.trello_id.unwrap(),
                 task_id = task._id.trello_id.clone().unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
