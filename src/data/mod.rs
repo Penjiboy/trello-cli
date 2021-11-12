@@ -24,6 +24,7 @@ pub struct CardComment {
     pub text: String,
     pub commenter_name: String,
     pub comment_time_instant_seconds: i64, // seconds of an instant
+    pub card_id: ID
 }
 
 #[derive(Clone, Serialize, Deserialize)]

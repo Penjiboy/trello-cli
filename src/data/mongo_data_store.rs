@@ -111,19 +111,21 @@ impl DataStore for MongoDataStore {
         Err(Box::new(NotImplError{}))
     }
 
-    async fn get_all_board_labels(board_id: &str) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
+    async fn get_all_board_labels(board_id: ID) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
         let labels: Vec<CardLabel>;
 
-        // unsafe {
-        //     let labels_collection: Collection<Board> = db.clone().unwrap().collection::<CardLabel>("labels");
-        //     let cursor = labels_collection.find(doc! {
-        //         "board_id": doc! {
-        //             "trello_id": bo
-        //         }
-        //     })
-        // }
+        unsafe {
+            let labels_collection: Collection<CardLabel> = db.clone().unwrap().collection::<CardLabel>("labels");
+            let cursor = labels_collection.find(doc! {
+                "board_id": doc! {
+                    "trello_id": board_id.trello_id.unwrap(),
+                    "local_id": board_id.local_id.unwrap()
+                }
+            }, None).await?;
+            labels = cursor.try_collect().await?;
+        }
 
-        Err(Box::new(NotImplError{}))
+        Ok(labels)
     }
 
     async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>> {
@@ -139,7 +141,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_all_board_lists(board_id: ID) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let lists: Vec<BoardList>;
+
+        unsafe {
+            let lists_collection: Collection<BoardList> = db.clone().unwrap().collection::<BoardList>("lists");
+            let cursor = lists_collection.find(doc! {
+                "board_id": doc! {
+                    "trello_id": board_id.trello_id.unwrap(),
+                    "local_id": board_id.local_id.unwrap()
+                }
+            }, None).await?;
+            lists = cursor.try_collect().await?;
+        }
+
+        Ok(lists)
     }
 
     async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
@@ -147,7 +162,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_all_list_cards(list_id: ID) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let cards: Vec<Card>;
+
+        unsafe {
+            let cards_collection: Collection<Card> = db.clone().unwrap().collection::<Card>("cards");
+            let cursor = cards_collection.find(doc! {
+                "list_id": doc! {
+                    "trello_id": list_id.trello_id.unwrap(),
+                    "local_id": list_id.local_id.unwrap()
+                }
+            }, None).await?;
+            cards = cursor.try_collect().await?;
+        }
+
+        Ok(cards)
     }
 
     async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
@@ -159,7 +187,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_card_comments(card_id: ID) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let comments: Vec<CardComment>;
+
+        unsafe {
+            let comments_collection: Collection<CardComment> = db.clone().unwrap().collection::<CardComment>("comments");
+            let cursor = comments_collection.find(doc! {
+                "card_id": doc! {
+                    "trello_id": card_id.trello_id.unwrap(),
+                    "local_id": card_id.local_id.unwrap()
+                }
+            }, None).await?;
+            comments = cursor.try_collect().await?;
+        }
+
+        Ok(comments)
     }
 
     async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
@@ -167,7 +208,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_card_checklists(card_id: ID) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let checklists: Vec<CardChecklist>;
+
+        unsafe {
+            let checklists_collection: Collection<CardChecklist> = db.clone().unwrap().collection::<CardChecklist>("checklists");
+            let cursor = checklists_collection.find(doc! {
+                "card_id": doc! {
+                    "trello_id": card_id.trello_id.unwrap(),
+                    "local_id": card_id.local_id.unwrap()
+                }
+            }, None).await?;
+            checklists = cursor.try_collect().await?;
+        }
+
+        Ok(checklists)
     }
 
     async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
@@ -175,7 +229,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn get_checklist_tasks(checklist_id: ID) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let tasks: Vec<CardChecklistTask>;
+
+        unsafe {
+            let tasks_collection: Collection<CardChecklistTask> = db.clone().unwrap().collection::<CardChecklistTask>("tasks");
+            let cursor = tasks_collection.find(doc! {
+                "checklist_id": doc! {
+                    "trello_id": checklist_id.trello_id.unwrap(),
+                    "local_id": checklist_id.local_id.unwrap()
+                }
+            }, None).await?;
+            tasks = cursor.try_collect().await?;
+        }
+
+        Ok(tasks)
     }
 
     async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {

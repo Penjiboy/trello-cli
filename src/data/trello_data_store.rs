@@ -183,7 +183,9 @@ impl TrelloDataStore {
         };
 
         let commenter_name: String = comment_object.get("memberCreator").unwrap().as_object().unwrap().get("fullName").unwrap().as_str().unwrap().to_string();
-        let comment_text: String = comment_object.get("data").unwrap().as_object().unwrap().get("text").unwrap().as_str().unwrap().to_string();
+        let comment_data = comment_object.get("data").unwrap().as_object().unwrap();
+        let comment_text: String = comment_data.get("text").unwrap().as_str().unwrap().to_string();
+        let card_id = Some(String::from(comment_data.get("card").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap()));
 
         let comment = CardComment {
             _id: ID {
@@ -192,7 +194,11 @@ impl TrelloDataStore {
             },
             commenter_name: commenter_name,
             text: comment_text,
-            comment_time_instant_seconds: date_instant_seconds
+            comment_time_instant_seconds: date_instant_seconds,
+            card_id: ID {
+                trello_id: card_id,
+                local_id: None
+            }
         };
 
         Ok(comment)
@@ -302,13 +308,13 @@ impl DataStore for TrelloDataStore {
     }
 
     async fn get_all_board_labels(
-        board_id: &str,
+        board_id: ID,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
                 "/boards/{id}/labels?key={key}&token={token}",
-                id = board_id,
+                id = board_id.trello_id.unwrap(),
                 key = key.clone().unwrap(),
                 token = token.clone().unwrap(),
             );

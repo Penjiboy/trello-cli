@@ -141,25 +141,25 @@ impl DataRepository {
         &mut self,
         board: Option<Board>,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
-        let board_id: String;
+        let board_id: ID;
 
         if board.is_none() {
             if self.cache_labels.is_none() {
                 if self.active_board.is_none() {
                     return Err(Box::new(InvalidInputError { message: Some(String::from("No board has been selected. Unable to infer which board's labels to get"))}));
                 } else {
-                    board_id = self.active_board.clone().unwrap()._id.trello_id.unwrap();
+                    board_id = self.active_board.clone().unwrap()._id;
                 }
             } else {
                 let labels = self.cache_labels.clone().unwrap();
                 return Ok(labels);
             }
         } else {
-            board_id = board.clone().unwrap()._id.trello_id.unwrap();
+            board_id = board.clone().unwrap()._id;
             self.invalidate_caches(true, true, true, true);
         }
 
-        let labels_result = TrelloDataStore::get_all_board_labels(&board_id).await;
+        let labels_result = TrelloDataStore::get_all_board_labels(board_id).await;
         match labels_result {
             Ok(trello_labels) => {
                 self.cache_labels.replace(trello_labels.clone());
@@ -590,7 +590,7 @@ pub trait DataStore {
     async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>>;
 
     async fn get_all_board_labels(
-        board_id: &str,
+        board_id: ID,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>>;
     async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>>;
     async fn update_board_label(label_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
