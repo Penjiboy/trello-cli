@@ -108,7 +108,21 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let boards_collection: Collection<Board>;
+        unsafe {
+            boards_collection = db.clone().unwrap().collection::<Board>("boards");
+        }
+        let object_id = oid::ObjectId::new();
+        let board: Board = Board {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string()
+        };
+
+        let _insert_result = boards_collection.insert_one(board.clone(), None).await?;
+        Ok(board)
     }
 
     async fn get_all_board_labels(board_id: ID) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
@@ -137,7 +151,23 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_board_label(board_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let labels_collection: Collection<CardLabel>;
+        unsafe {
+            labels_collection = db.clone().unwrap().collection::<CardLabel>("labels");
+        }
+        let object_id = oid::ObjectId::new();
+        let label: CardLabel = CardLabel {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string(),
+            color: color.to_string(),
+            board_id: board_id
+        };
+
+        let _insert_result = labels_collection.insert_one(label.clone(), None).await?;
+        Ok(label)
     }
 
     async fn get_all_board_lists(board_id: ID) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
@@ -158,7 +188,22 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let lists_collection: Collection<BoardList>;
+        unsafe {
+            lists_collection = db.clone().unwrap().collection::<BoardList>("lists");
+        }
+        let object_id = oid::ObjectId::new();
+        let list: BoardList = BoardList {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string(),
+            board_id: board_id
+        };
+
+        let _insert_result = lists_collection.insert_one(list.clone(), None).await?;
+        Ok(list)
     }
 
     async fn get_all_list_cards(list_id: ID) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
@@ -179,7 +224,27 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let cards_collection: Collection<Card>;
+        unsafe {
+            cards_collection = db.clone().unwrap().collection::<Card>("cards");
+        }
+        let object_id = oid::ObjectId::new();
+        let card: Card = Card {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string(),
+            list_id: list_id,
+            description: "".to_string(),
+            due_date_instant_seconds: 0,
+            due_complete: false,
+            label_ids: vec![],
+            checklists_ids: vec![]
+        };
+
+        let _insert_result = cards_collection.insert_one(card.clone(), None).await?;
+        Ok(card)
     }
 
     async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
@@ -204,7 +269,24 @@ impl DataStore for MongoDataStore {
     }
 
     async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let comments_collection: Collection<CardComment>;
+        unsafe {
+            comments_collection = db.clone().unwrap().collection::<CardComment>("comments");
+        }
+        let object_id = oid::ObjectId::new();
+        let comment: CardComment = CardComment {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            text: text.to_string(),
+            card_id: card_id,
+            commenter_name: "".to_string(), // TODO: Handle this better
+            comment_time_instant_seconds: 0,
+        };
+
+        let _insert_result = comments_collection.insert_one(comment.clone(), None).await?;
+        Ok(comment)
     }
 
     async fn get_card_checklists(card_id: ID) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
@@ -225,7 +307,22 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let checklists_collection: Collection<CardChecklist>;
+        unsafe {
+            checklists_collection = db.clone().unwrap().collection::<CardChecklist>("checklists");
+        }
+        let object_id = oid::ObjectId::new();
+        let checklist: CardChecklist = CardChecklist {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string(),
+            card_id: card_id,
+        };
+
+        let _insert_result = checklists_collection.insert_one(checklist.clone(), None).await?;
+        Ok(checklist)
     }
 
     async fn get_checklist_tasks(checklist_id: ID) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
@@ -246,7 +343,23 @@ impl DataStore for MongoDataStore {
     }
 
     async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        let tasks_collection: Collection<CardChecklistTask>;
+        unsafe {
+            tasks_collection = db.clone().unwrap().collection::<CardChecklistTask>("tasks");
+        }
+        let object_id = oid::ObjectId::new();
+        let task: CardChecklistTask = CardChecklistTask {
+            _id: ID {
+                trello_id: None,
+                local_id: Some(object_id.to_hex())
+            },
+            name: name.to_string(),
+            checklist_id: checklist_id,
+            is_complete: false
+        };
+
+        let _insert_result = tasks_collection.insert_one(task.clone(), None).await?;
+        Ok(task)
     }
 
     async fn update_checklist_task(card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
