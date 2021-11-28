@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use futures::stream::TryStreamExt;
 use mongodb::{
     bson::doc, options::ClientOptions, options::InsertManyOptions, options::UpdateOptions, Client,
-    Collection, Database, bson::oid, bson::Document
+    Collection, Database, bson::oid, bson::Document, options::FindOneAndUpdateOptions
 };
 use serde_json::{Map, Value};
 
@@ -143,11 +143,36 @@ impl DataStore for MongoDataStore {
     }
 
     async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        unsafe {
+            let labels_collection: Collection<CardLabel> = db.clone().unwrap().collection::<CardLabel>("labels");
+            let _delete_result = labels_collection.delete_one(doc! {
+                "_id": doc! {
+                    "trello_id": label_id.trello_id.unwrap(),
+                    "local_id": label_id.local_id.unwrap()
+                }
+            }, None).await?;
+        }
+        
+        Ok(())
     }
 
     async fn update_board_label(label_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        unsafe {
+            let labels_collection = db.clone().unwrap().collection::<CardLabel>("labels");
+            let update_doc = doc! {
+                "$set": doc! {
+                    "name": name.to_string(),
+                    "color": color.to_string()
+                }
+            };
+
+            let find_update_options = FindOneAndUpdateOptions::builder().return_document(mongodb::options::ReturnDocument::After).build();
+            let find_update_result = labels_collection.find_one_and_update( doc! {
+                "_id": label_id.to_doc::<ID>(false)
+            }, update_doc, find_update_options).await?;
+            
+            Ok(find_update_result.unwrap())
+        }
     }
 
     async fn create_board_label(board_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
@@ -431,6 +456,36 @@ impl ToDocument for Board {
                     "local_id": self._id.local_id.clone().unwrap()
                 },
                 "name": self.name.clone()
+            }
+        }
+    }
+}
+
+impl ToDocument for ID {
+    fn to_doc<ID>(&self, is_update_op: bool) -> Document {
+        return doc! {
+            "trello_id": self.trello_id.clone().unwrap(),
+            "local_id": self.local_id.clone().unwrap()
+        }
+    }
+}
+
+impl ToDocument for CardLabel {
+    fn to_doc<CardLabel>(&self, is_update_op: bool) -> Document {
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "board_id": self.board_id.to_doc::<ID>(false),
+                    "name": self.name.clone(),
+                    "color": self.color.clone()
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "board_id": self.board_id.to_doc::<ID>(false),
+                "name": self.name.clone(),
+                "color": self.color.clone()
             }
         }
     }
