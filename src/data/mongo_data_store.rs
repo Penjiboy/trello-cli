@@ -166,7 +166,10 @@ impl DataStore for MongoDataStore {
                 }
             };
 
-            let find_update_options = FindOneAndUpdateOptions::builder().return_document(mongodb::options::ReturnDocument::After).build();
+            let find_update_options = FindOneAndUpdateOptions::builder()
+                .return_document(mongodb::options::ReturnDocument::After)
+                .upsert(Some(true))
+                .build();
             let find_update_result = labels_collection.find_one_and_update( doc! {
                 "_id": label_id.to_doc::<ID>(false)
             }, update_doc, find_update_options).await?;
@@ -273,7 +276,20 @@ impl DataStore for MongoDataStore {
     }
 
     async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+        unsafe {
+            let cards_collection = db.clone().unwrap().collection::<Card>("cards");
+            let update_doc = card.to_doc::<Card>(true);
+
+            let find_update_options = FindOneAndUpdateOptions::builder()
+                .return_document(mongodb::options::ReturnDocument::After)
+                .upsert(Some(true))
+                .build();
+            let find_update_result = cards_collection.find_one_and_update( doc! {
+                "_id": card._id.to_doc::<ID>(false)
+            }, update_doc, find_update_options).await?;
+            
+            Ok(find_update_result.unwrap())
+        }
     }
 
     async fn get_card_comments(card_id: ID) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
@@ -387,8 +403,21 @@ impl DataStore for MongoDataStore {
         Ok(task)
     }
 
-    async fn update_checklist_task(card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
-        Err(Box::new(NotImplError{}))
+    async fn update_checklist_task(_card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+        unsafe {
+            let tasks_collection = db.clone().unwrap().collection::<CardChecklistTask>("tasks");
+            let update_doc = task.to_doc::<CardChecklistTask>(true);
+
+            let find_update_options = FindOneAndUpdateOptions::builder()
+                .return_document(mongodb::options::ReturnDocument::After)
+                .upsert(Some(true))
+                .build();
+            let find_update_result = tasks_collection.find_one_and_update( doc! {
+                "_id": task._id.to_doc::<ID>(false)
+            }, update_doc, find_update_options).await?;
+            
+            Ok(find_update_result.unwrap())
+        }
     }
 }
 
@@ -486,6 +515,69 @@ impl ToDocument for CardLabel {
                 "board_id": self.board_id.to_doc::<ID>(false),
                 "name": self.name.clone(),
                 "color": self.color.clone()
+            }
+        }
+    }
+}
+
+impl ToDocument for CardChecklistTask {
+    fn to_doc<CardChecklistTask>(&self, is_update_op: bool) -> Document {
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "name": self.name.clone(),
+                    "is_complete": self.is_complete,
+                    "checklist_id": self.checklist_id.to_doc::<ID>(false)
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "name": self.name.clone(),
+                "is_complete": self.is_complete,
+                "checklist_id": self.checklist_id.to_doc::<ID>(false)
+            }
+        }
+    }
+}
+
+impl ToDocument for Card {
+    fn to_doc<Card>(&self, is_update_op: bool) -> Document {
+        let mut label_id_docs: Vec<Document> = vec![];
+        let mut checklist_id_docs: Vec<Document> = vec!();
+
+        for label_id in &self.label_ids {
+            let doc = label_id.to_doc::<ID>(false);
+            label_id_docs.push(doc);
+        }
+
+        for checklist_id in &self.checklists_ids {
+            let doc = checklist_id.to_doc::<ID>(false);
+            checklist_id_docs.push(doc);
+        }
+
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "name": self.name.clone(),
+                    "description": self.description.clone(),
+                    "due_date_instant_seconds": self.due_date_instant_seconds,
+                    "due_complete": self.due_complete,
+                    "label_ids": label_id_docs,
+                    "checklists_ids": checklist_id_docs,
+                    "list_id": self.list_id.to_doc::<ID>(false)
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "name": self.name.clone(),
+                "description": self.description.clone(),
+                "due_date_instant_seconds": self.due_date_instant_seconds,
+                "due_complete": self.due_complete,
+                "label_ids": label_id_docs,
+                "checklists_ids": checklist_id_docs,
+                "list_id": self.list_id.to_doc::<ID>(false)
             }
         }
     }
