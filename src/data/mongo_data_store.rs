@@ -70,7 +70,7 @@ impl MongoDataStore {
             if existing_board.is_some() {
                 board._id.local_id.replace(existing_board.unwrap()._id.local_id.as_ref().unwrap().to_string());
                 let update_doc = board.to_doc::<Board>(true);
-                let update_result = boards_collection.update_one(
+                let _update_result = boards_collection.update_one(
                     doc! {
                         "_id": doc! {
                             "trello_id": board._id.trello_id.clone().unwrap()
@@ -82,13 +82,224 @@ impl MongoDataStore {
             } else {
                 let object_id = oid::ObjectId::new();
                 board._id.local_id.replace(object_id.to_hex());
-                let insert_result = boards_collection.insert_one(board.clone(), None).await?;
+                let _insert_result = boards_collection.insert_one(board.clone(), None).await?;
             }
 
             boards_with_ids.push(board);
         }
 
         Ok(boards_with_ids)
+    }
+
+    pub async fn sync_labels(board_id: ID, trello_labels: Vec<CardLabel>) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>> {
+        let labels_collection: Collection<CardLabel>;
+
+        unsafe {
+            labels_collection = db.clone().unwrap().collection::<CardLabel>("labels");
+        }
+
+        let mut labels_with_ids: Vec<CardLabel> = vec![];
+        let existing_labels: Vec<CardLabel> = MongoDataStore::get_all_board_labels(board_id).await?;
+
+        let mut existing_label_by_trello_id: HashMap<String, CardLabel> = HashMap::new();
+
+        for label in existing_labels {
+            existing_label_by_trello_id.insert(label.clone()._id.trello_id.unwrap(), label);
+        }
+
+        for mut label in trello_labels {
+            let existing_label = existing_label_by_trello_id.get(&label._id.trello_id.clone().unwrap());
+            if existing_label.is_some() {
+                label._id.local_id.replace(existing_label.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = label.to_doc::<CardLabel>(true);
+                let _update_result = labels_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": label._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                label._id.local_id.replace(object_id.to_hex());
+                let _insert_result = labels_collection.insert_one(label.clone(), None).await?;
+            }
+
+            labels_with_ids.push(label);
+        }
+
+        Ok(labels_with_ids)
+    }
+
+    pub async fn sync_lists(board_id: ID, trello_lists: Vec<BoardList>) -> Result<Vec<BoardList>, Box<dyn std::error::Error>> {
+        let lists_collection: Collection<BoardList>;
+
+        unsafe {
+            lists_collection = db.clone().unwrap().collection::<BoardList>("lists");
+        }
+
+        let mut lists_with_ids: Vec<BoardList> = vec![];
+        let existing_lists: Vec<BoardList> = MongoDataStore::get_all_board_lists(board_id).await?;
+
+        let mut existing_list_by_trello_id: HashMap<String, BoardList> = HashMap::new();
+
+        for list in existing_lists {
+            existing_list_by_trello_id.insert(list.clone()._id.trello_id.unwrap(), list);
+        }
+
+        for mut list in trello_lists {
+            let existing_list = existing_list_by_trello_id.get(&list._id.trello_id.clone().unwrap());
+            if existing_list.is_some() {
+                list._id.local_id.replace(existing_list.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = list.to_doc::<BoardList>(true);
+                let _update_result = lists_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": list._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                list._id.local_id.replace(object_id.to_hex());
+                let _insert_result = lists_collection.insert_one(list.clone(), None).await?;
+            }
+
+            lists_with_ids.push(list);
+        }
+
+        Ok(lists_with_ids)
+    }
+
+    pub async fn sync_cards(list_id: ID, trello_cards: Vec<Card>) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
+        // TODO: Please refactor this, there is lots of almost-duplicate code
+        let cards_collection: Collection<Card>;
+
+        unsafe {
+            cards_collection = db.clone().unwrap().collection::<Card>("cards");
+        }
+
+        let mut cards_with_ids: Vec<Card> = vec![];
+        let existing_cards: Vec<Card> = MongoDataStore::get_all_list_cards(list_id).await?;
+
+        let mut existing_card_by_trello_id: HashMap<String, Card> = HashMap::new();
+
+        for card in existing_cards {
+            existing_card_by_trello_id.insert(card.clone()._id.trello_id.unwrap(), card);
+        }
+
+        for mut card in trello_cards {
+            let existing_card = existing_card_by_trello_id.get(&card._id.trello_id.clone().unwrap());
+            if existing_card.is_some() {
+                card._id.local_id.replace(existing_card.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = card.to_doc::<Card>(true);
+                let _update_result = cards_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": card._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                card._id.local_id.replace(object_id.to_hex());
+                let _insert_result = cards_collection.insert_one(card.clone(), None).await?;
+            }
+
+            cards_with_ids.push(card);
+        }
+
+        Ok(cards_with_ids)
+    }
+
+    pub async fn sync_checklists(card_id: ID, trello_checklists: Vec<CardChecklist>) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>> {
+        let checklists_collection: Collection<CardChecklist>;
+
+        unsafe {
+            checklists_collection = db.clone().unwrap().collection::<CardChecklist>("checklists");
+        }
+
+        let mut checklists_with_ids: Vec<CardChecklist> = vec![];
+        let existing_checklists: Vec<CardChecklist> = MongoDataStore::get_card_checklists(card_id).await?;
+
+        let mut existing_checklist_by_trello_id: HashMap<String, CardChecklist> = HashMap::new();
+
+        for checklist in existing_checklists {
+            existing_checklist_by_trello_id.insert(checklist.clone()._id.trello_id.unwrap(), checklist);
+        }
+
+        for mut checklist in trello_checklists {
+            let existing_checklist = existing_checklist_by_trello_id.get(&checklist._id.trello_id.clone().unwrap());
+            if existing_checklist.is_some() {
+                checklist._id.local_id.replace(existing_checklist.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = checklist.to_doc::<CardChecklist>(true);
+                let _update_result = checklists_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": checklist._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                checklist._id.local_id.replace(object_id.to_hex());
+                let _insert_result = checklists_collection.insert_one(checklist.clone(), None).await?;
+            }
+
+            checklists_with_ids.push(checklist);
+        }
+
+        Ok(checklists_with_ids)
+    }
+
+    pub async fn sync_tasks(checklist_id: ID, trello_tasks: Vec<CardChecklistTask>) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>> {
+        let tasks_collection: Collection<CardChecklistTask>;
+
+        unsafe {
+            tasks_collection = db.clone().unwrap().collection::<CardChecklistTask>("tasks");
+        }
+
+        let mut tasks_with_ids: Vec<CardChecklistTask> = vec![];
+        let existing_tasks: Vec<CardChecklistTask> = MongoDataStore::get_checklist_tasks(checklist_id).await?;
+
+        let mut existing_task_by_trello_id: HashMap<String, CardChecklistTask> = HashMap::new();
+
+        for task in existing_tasks {
+            existing_task_by_trello_id.insert(task.clone()._id.trello_id.unwrap(), task);
+        }
+
+        for mut task in trello_tasks {
+            let existing_task = existing_task_by_trello_id.get(&task._id.trello_id.clone().unwrap());
+            if existing_task.is_some() {
+                task._id.local_id.replace(existing_task.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = task.to_doc::<CardChecklistTask>(true);
+                let _update_result = tasks_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": task._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                task._id.local_id.replace(object_id.to_hex());
+                let _insert_result = tasks_collection.insert_one(task.clone(), None).await?;
+            }
+
+            tasks_with_ids.push(task);
+        }
+
+        Ok(tasks_with_ids)
     }
 }
 
@@ -499,6 +710,25 @@ impl ToDocument for ID {
     }
 }
 
+impl ToDocument for BoardList {
+    fn to_doc<BoardList>(&self, is_update_op: bool) -> Document {
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "board_id": self.board_id.to_doc::<ID>(false),
+                    "name": self.name.clone(),
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "board_id": self.board_id.to_doc::<ID>(false),
+                "name": self.name.clone(),
+            }
+        }
+    }
+}
+
 impl ToDocument for CardLabel {
     fn to_doc<CardLabel>(&self, is_update_op: bool) -> Document {
         return if is_update_op {
@@ -515,6 +745,25 @@ impl ToDocument for CardLabel {
                 "board_id": self.board_id.to_doc::<ID>(false),
                 "name": self.name.clone(),
                 "color": self.color.clone()
+            }
+        }
+    }
+}
+
+impl ToDocument for CardChecklist {
+    fn to_doc<CardChecklist>(&self, is_update_op: bool) -> Document {
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "card_id": self.card_id.to_doc::<ID>(false),
+                    "name": self.name.clone(),
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "card_id": self.card_id.to_doc::<ID>(false),
+                "name": self.name.clone(),
             }
         }
     }
