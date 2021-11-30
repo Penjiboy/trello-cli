@@ -68,8 +68,8 @@ impl DataRepository {
 
         match trello_boards_result {
             Ok(trello_boards) => {
-                self.cache_boards = Some(trello_boards.clone());
                 let synced_boards = MongoDataStore::sync_boards(trello_boards).await?;
+                self.cache_boards = Some(synced_boards.clone());
                 Ok(synced_boards)
             }
 
@@ -159,11 +159,12 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
         }
 
-        let labels_result = TrelloDataStore::get_all_board_labels(board_id).await;
+        let labels_result = TrelloDataStore::get_all_board_labels(board_id.clone()).await;
         match labels_result {
             Ok(trello_labels) => {
-                self.cache_labels.replace(trello_labels.clone());
-                Ok(trello_labels)
+                let synced_labels = MongoDataStore::sync_labels(board_id, trello_labels).await?;
+                self.cache_labels.replace(synced_labels.clone());
+                Ok(synced_labels)
             }
 
             Err(why) => {
@@ -285,11 +286,12 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
         }
 
-        let lists_result = TrelloDataStore::get_all_board_lists(board_id).await;
+        let lists_result = TrelloDataStore::get_all_board_lists(board_id.clone()).await;
         match lists_result {
             Ok(trello_lists) => {
-                self.cache_boardlists.replace(trello_lists.clone());
-                Ok(trello_lists)
+                let synced_lists = MongoDataStore::sync_lists(board_id, trello_lists).await?;
+                self.cache_boardlists.replace(synced_lists.clone());
+                Ok(synced_lists)
             }
 
             Err(why) => {
@@ -364,11 +366,12 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
         }
 
-        let cards_result = TrelloDataStore::get_all_list_cards(list_id).await;
+        let cards_result = TrelloDataStore::get_all_list_cards(list_id.clone()).await;
         match cards_result {
             Ok(trello_cards) => {
-                self.cache_cards.replace(trello_cards.clone());
-                Ok(trello_cards)
+                let synced_cards = MongoDataStore::sync_cards(list_id, trello_cards).await?;
+                self.cache_cards.replace(synced_cards.clone());
+                Ok(synced_cards)
             }
 
             Err(why) => {
@@ -429,19 +432,22 @@ impl DataRepository {
 
     pub async fn get_card_comments(&mut self, card: Option<Card>) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
         let card_id: ID;
-
+        let trello_comments: Vec<CardComment>;
+        
         if card.is_none() {
             if self.active_card.is_none() {
                 return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected or provided. Unable to infer which card's comments to get"))}));
             } else {
                 card_id = self.active_card.clone().unwrap()._id;
-                return TrelloDataStore::get_card_comments(card_id).await;
+                trello_comments = TrelloDataStore::get_card_comments(card_id.clone()).await?;
             }
         } else {
             card_id = card.clone().unwrap()._id;
             self.invalidate_caches(true, true, true, true);
-            return TrelloDataStore::get_card_comments(card_id).await;
+            trello_comments = TrelloDataStore::get_card_comments(card_id.clone()).await?;
         }
+
+        MongoDataStore::sync_comments(card_id, trello_comments).await
     }
 
     pub async fn add_card_comment(&mut self, card: Option<Card>, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
@@ -480,11 +486,12 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
         }
 
-        let checklists_result = TrelloDataStore::get_card_checklists(card_id).await;
+        let checklists_result = TrelloDataStore::get_card_checklists(card_id.clone()).await;
         match checklists_result {
             Ok(trello_checklists) => {
-                self.cache_checklists.replace(trello_checklists.clone());
-                Ok(trello_checklists)
+                let synced_checklists = MongoDataStore::sync_checklists(card_id, trello_checklists).await?;
+                self.cache_checklists.replace(synced_checklists.clone());
+                Ok(synced_checklists)
             }
 
             Err(why) => {
@@ -548,7 +555,8 @@ impl DataRepository {
             self.invalidate_caches(true, true, true, true);
         }
 
-        TrelloDataStore::get_checklist_tasks(checklist_id).await
+        let trello_tasks = TrelloDataStore::get_checklist_tasks(checklist_id.clone()).await?;
+        MongoDataStore::sync_tasks(checklist_id, trello_tasks).await
     }
 
     pub async fn create_checklist_task(&mut self, checklist: Option<CardChecklist>, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {

@@ -301,6 +301,48 @@ impl MongoDataStore {
 
         Ok(tasks_with_ids)
     }
+
+    pub async fn sync_comments(card_id: ID, trello_comments: Vec<CardComment>) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
+        let comments_collection: Collection<CardComment>;
+
+        unsafe {
+            comments_collection = db.clone().unwrap().collection::<CardComment>("comments");
+        }
+
+        let mut comments_with_ids: Vec<CardComment> = vec![];
+        let existing_comments: Vec<CardComment> = MongoDataStore::get_card_comments(card_id).await?;
+
+        let mut existing_comment_by_trello_id: HashMap<String, CardComment> = HashMap::new();
+
+        for comment in existing_comments {
+            existing_comment_by_trello_id.insert(comment.clone()._id.trello_id.unwrap(), comment);
+        }
+
+        for mut comment in trello_comments {
+            let existing_comment = existing_comment_by_trello_id.get(&comment._id.trello_id.clone().unwrap());
+            if existing_comment.is_some() {
+                comment._id.local_id.replace(existing_comment.unwrap()._id.local_id.as_ref().unwrap().to_string());
+                let update_doc = comment.to_doc::<CardComment>(true);
+                let _update_result = comments_collection.update_one(
+                    doc! {
+                        "_id": doc! {
+                            "trello_id": comment._id.trello_id.clone().unwrap()
+                        },
+                    },
+                    update_doc,
+                    None
+                ).await?;
+            } else {
+                let object_id = oid::ObjectId::new();
+                comment._id.local_id.replace(object_id.to_hex());
+                let _insert_result = comments_collection.insert_one(comment.clone(), None).await?;
+            }
+
+            comments_with_ids.push(comment);
+        }
+
+        Ok(comments_with_ids)
+    }
 }
 
 #[async_trait]
@@ -827,6 +869,32 @@ impl ToDocument for Card {
                 "label_ids": label_id_docs,
                 "checklists_ids": checklist_id_docs,
                 "list_id": self.list_id.to_doc::<ID>(false)
+            }
+        }
+    }
+}
+
+impl ToDocument for CardComment {
+    fn to_doc<CardComment>(&self, is_update_op: bool) -> Document {
+        let mut label_id_docs: Vec<Document> = vec![];
+        let mut checklist_id_docs: Vec<Document> = vec!();
+
+        return if is_update_op {
+            doc! {
+                "$set": doc! {
+                    "commenter_name": self.commenter_name.clone(),
+                    "text": self.text.clone(),
+                    "comment_time_instant_seconds": self.comment_time_instant_seconds,
+                    "card_id": self.card_id.to_doc::<ID>(false)
+                }
+            }
+        } else {
+            doc! {
+                "_id": self._id.to_doc::<ID>(false),
+                "commenter_name": self.commenter_name.clone(),
+                "text": self.text.clone(),
+                "comment_time_instant_seconds": self.comment_time_instant_seconds,
+                "card_id": self.card_id.to_doc::<ID>(false)
             }
         }
     }
