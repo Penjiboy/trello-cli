@@ -4,9 +4,11 @@ use mongodb::{Client, options::ClientOptions };
 use structopt::StructOpt;
 use tokio;
 use serde_json::Value;
+use dirs;
 
 use std::path::PathBuf;
 use std::fs::File;
+use std::fs;
 use std::io::Read;
 
 mod data;
@@ -33,12 +35,39 @@ async fn main() {
     let args = CliArgs::from_args();
     
     let mut config_object: Option<Value> = None;
+    let config_folder: Option<PathBuf> = dirs::config_dir();
+    let mut app_config_folder: PathBuf = config_folder.unwrap_or_default();
+    app_config_folder.push("trello-cli");
+    let mut default_app_config_path: PathBuf = app_config_folder.clone();
+
+    if !app_config_folder.is_dir() {
+        let create_result = std::fs::create_dir_all(app_config_folder);
+        match create_result {
+            Ok(()) => println!("Created config dir"),
+            Err(e) => {
+                println!("Failed to create config directory");
+                return;
+            }
+        };
+    }
+
+    default_app_config_path.push("config.json");
     if args.config_file.is_some() {
         let path: PathBuf = args.config_file.unwrap();
-        let mut config_file = File::open(path).unwrap();
+        let mut config_file = File::open(path.clone()).unwrap();
         let mut file_content = String::from("");
         config_file.read_to_string(&mut file_content).unwrap();
         config_object = Some(serde_json::from_str(&file_content).unwrap());
+        if !default_app_config_path.is_file() {
+            let _copy_result = std::fs::copy(path, default_app_config_path);
+        }
+    } else if default_app_config_path.is_file() {
+        let mut config_file = File::open(default_app_config_path).unwrap();
+        let mut file_content = String::from("");
+        config_file.read_to_string(&mut file_content).unwrap();
+        config_object = Some(serde_json::from_str(&file_content).unwrap());
+    } else {
+        println!("No config file provided and no config.json file was found at {}", default_app_config_path.display());
     }
 
     if args.interactive {

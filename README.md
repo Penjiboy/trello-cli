@@ -59,6 +59,7 @@ docker-compose up -d
 ```
 
 * Running with `-i` takes you into the interactive shell
+* NOTE: The very first config file you run with will be saved to \$HOME/.config/trello-cli/config.json and this will be the default config file that is used if you do not provide the argument
 
 ## Tips for running in the interactive shell
 
