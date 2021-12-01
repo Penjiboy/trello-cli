@@ -360,7 +360,7 @@ impl DataStore for MongoDataStore {
         Ok(boards)
     }
 
-    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
+    async fn create_board(name: &str, trello_id: Option<String>) -> Result<Board, Box<dyn std::error::Error>> {
         let boards_collection: Collection<Board>;
         unsafe {
             boards_collection = db.clone().unwrap().collection::<Board>("boards");
@@ -368,7 +368,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let board: Board = Board {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string()
@@ -431,7 +431,7 @@ impl DataStore for MongoDataStore {
         }
     }
 
-    async fn create_board_label(board_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>> {
+    async fn create_board_label(board_id: ID, name: &str, color: &str, trello_id: Option<String>) -> Result<CardLabel, Box<dyn std::error::Error>> {
         let labels_collection: Collection<CardLabel>;
         unsafe {
             labels_collection = db.clone().unwrap().collection::<CardLabel>("labels");
@@ -439,7 +439,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let label: CardLabel = CardLabel {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string(),
@@ -468,7 +468,7 @@ impl DataStore for MongoDataStore {
         Ok(lists)
     }
 
-    async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+    async fn create_board_list(board_id: ID, name: &str, trello_id: Option<String>) -> Result<BoardList, Box<dyn std::error::Error>> {
         let lists_collection: Collection<BoardList>;
         unsafe {
             lists_collection = db.clone().unwrap().collection::<BoardList>("lists");
@@ -476,7 +476,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let list: BoardList = BoardList {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string(),
@@ -504,7 +504,7 @@ impl DataStore for MongoDataStore {
         Ok(cards)
     }
 
-    async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
+    async fn create_list_card(list_id: ID, name: &str, trello_id: Option<String>) -> Result<Card, Box<dyn std::error::Error>> {
         let cards_collection: Collection<Card>;
         unsafe {
             cards_collection = db.clone().unwrap().collection::<Card>("cards");
@@ -512,7 +512,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let card: Card = Card {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string(),
@@ -562,7 +562,7 @@ impl DataStore for MongoDataStore {
         Ok(comments)
     }
 
-    async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+    async fn add_card_comment(card_id: ID, text: &str, trello_id: Option<String>) -> Result<CardComment, Box<dyn std::error::Error>> {
         let comments_collection: Collection<CardComment>;
         unsafe {
             comments_collection = db.clone().unwrap().collection::<CardComment>("comments");
@@ -570,7 +570,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let comment: CardComment = CardComment {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             text: text.to_string(),
@@ -600,7 +600,7 @@ impl DataStore for MongoDataStore {
         Ok(checklists)
     }
 
-    async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+    async fn create_card_checklist(card_id: ID, name: &str, trello_id: Option<String>) -> Result<CardChecklist, Box<dyn std::error::Error>> {
         let checklists_collection: Collection<CardChecklist>;
         unsafe {
             checklists_collection = db.clone().unwrap().collection::<CardChecklist>("checklists");
@@ -608,7 +608,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let checklist: CardChecklist = CardChecklist {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string(),
@@ -636,7 +636,7 @@ impl DataStore for MongoDataStore {
         Ok(tasks)
     }
 
-    async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn create_checklist_task(checklist_id: ID, name: &str, trello_id: Option<String>) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         let tasks_collection: Collection<CardChecklistTask>;
         unsafe {
             tasks_collection = db.clone().unwrap().collection::<CardChecklistTask>("tasks");
@@ -644,7 +644,7 @@ impl DataStore for MongoDataStore {
         let object_id = oid::ObjectId::new();
         let task: CardChecklistTask = CardChecklistTask {
             _id: ID {
-                trello_id: None,
+                trello_id: trello_id,
                 local_id: Some(object_id.to_hex())
             },
             name: name.to_string(),

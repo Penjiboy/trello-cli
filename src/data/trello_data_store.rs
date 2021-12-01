@@ -287,7 +287,7 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>> {
+    async fn create_board(name: &str, _trello_id: Option<String>) -> Result<Board, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
@@ -392,7 +392,8 @@ impl DataStore for TrelloDataStore {
     async fn create_board_label(
         board_id: ID,
         name: &str,
-        color: &str
+        color: &str, 
+        _trello_id: Option<String>
     ) -> Result<CardLabel, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
@@ -441,7 +442,7 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>> {
+    async fn create_board_list(board_id: ID, name: &str, _trello_id: Option<String>) -> Result<BoardList, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
@@ -488,7 +489,7 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>> {
+    async fn create_list_card(list_id: ID, name: &str, _trello_id: Option<String>) -> Result<Card, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
@@ -581,7 +582,7 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>> {
+    async fn add_card_comment(card_id: ID, text: &str, _trello_id: Option<String>) -> Result<CardComment, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
@@ -632,7 +633,7 @@ impl DataStore for TrelloDataStore {
 
     }
 
-    async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>> {
+    async fn create_card_checklist(card_id: ID, name: &str, _trello_id: Option<String>) -> Result<CardChecklist, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(
@@ -682,7 +683,7 @@ impl DataStore for TrelloDataStore {
         Ok(result)
     }
 
-    async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
+    async fn create_checklist_task(checklist_id: ID, name: &str, _trello_id: Option<String>) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
         let url_path: String;
         unsafe {
             url_path = format!(

@@ -94,7 +94,7 @@ impl DataRepository {
     }
 
     pub async fn create_board(&mut self, name: &str) -> Result<Board, Box<dyn std::error::Error>> {
-        let trello_board_result = TrelloDataStore::create_board(name).await;
+        let trello_board_result = TrelloDataStore::create_board(name, None).await;
         match trello_board_result {
             Ok(trello_board) => {
                 if self.cache_boards.is_some() {
@@ -261,7 +261,7 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, false, true);
-        return TrelloDataStore::create_board_label(board_id, name, color).await;
+        return TrelloDataStore::create_board_label(board_id, name, color, None).await;
     }
 
     pub async fn get_all_board_lists(
@@ -314,7 +314,7 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, true, true);
-        return TrelloDataStore::create_board_list(board_id, name).await;
+        return TrelloDataStore::create_board_list(board_id, name, None).await;
     }
 
     pub async fn select_board_list(
@@ -394,7 +394,7 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, true, false);
-        TrelloDataStore::create_list_card(list_id, name).await
+        TrelloDataStore::create_list_card(list_id, name, None).await
     }
 
     pub async fn select_list_card(
@@ -458,12 +458,12 @@ impl DataRepository {
                 return Err(Box::new(InvalidInputError { message: Some(String::from("No card has been selected or provided. Unable to infer which card to add a comment to"))}));
             } else {
                 card_id = self.active_card.clone().unwrap()._id;
-                return TrelloDataStore::add_card_comment(card_id, text).await;
+                return TrelloDataStore::add_card_comment(card_id, text, None).await;
             }
         } else {
             card_id = card.clone().unwrap()._id;
             self.invalidate_caches(true, true, true, true);
-            return TrelloDataStore::add_card_comment(card_id, text).await;
+            return TrelloDataStore::add_card_comment(card_id, text, None).await;
         }
     }
 
@@ -514,7 +514,7 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, false, true, false);
-        TrelloDataStore::create_card_checklist(card_id, name).await
+        TrelloDataStore::create_card_checklist(card_id, name, None).await
     }
 
     pub async fn select_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<Option<CardChecklist>, Box<dyn std::error::Error>> {
@@ -572,7 +572,7 @@ impl DataRepository {
                 self.active_checklist.clone().unwrap()._id
             };
         }
-        TrelloDataStore::create_checklist_task(checklist_id, name).await
+        TrelloDataStore::create_checklist_task(checklist_id, name, None).await
     }
 
     pub async fn update_checklist_task(&mut self, card: Option<Card>, task: CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
@@ -595,27 +595,27 @@ impl DataRepository {
 #[async_trait]
 pub trait DataStore {
     async fn get_all_boards() -> Result<Vec<Board>, Box<dyn std::error::Error>>;
-    async fn create_board(name: &str) -> Result<Board, Box<dyn std::error::Error>>;
+    async fn create_board(name: &str, trello_id: Option<String>) -> Result<Board, Box<dyn std::error::Error>>;
 
     async fn get_all_board_labels(
         board_id: ID,
     ) -> Result<Vec<CardLabel>, Box<dyn std::error::Error>>;
     async fn delete_board_label(label_id: ID) -> Result<(), Box<dyn std::error::Error>>;
     async fn update_board_label(label_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
-    async fn create_board_label(board_id: ID, name: &str, color: &str) -> Result<CardLabel, Box<dyn std::error::Error>>;
+    async fn create_board_label(board_id: ID, name: &str, color: &str, trello_id: Option<String>) -> Result<CardLabel, Box<dyn std::error::Error>>;
 
     async fn get_all_board_lists(board_id: ID) -> Result<Vec<BoardList>, Box<dyn std::error::Error>>;
-    async fn create_board_list(board_id: ID, name: &str) -> Result<BoardList, Box<dyn std::error::Error>>;
+    async fn create_board_list(board_id: ID, name: &str, trello_id: Option<String>) -> Result<BoardList, Box<dyn std::error::Error>>;
 
     async fn get_all_list_cards(list_id: ID) -> Result<Vec<Card>, Box<dyn std::error::Error>>;
-    async fn create_list_card(list_id: ID, name: &str) -> Result<Card, Box<dyn std::error::Error>>;
+    async fn create_list_card(list_id: ID, name: &str, trello_id: Option<String>) -> Result<Card, Box<dyn std::error::Error>>;
     async fn update_card(card: &Card) -> Result<Card, Box<dyn std::error::Error>>;
     async fn get_card_comments(card_id: ID) -> Result<Vec<CardComment>, Box<dyn std::error::Error>>;
-    async fn add_card_comment(card_id: ID, text: &str) -> Result<CardComment, Box<dyn std::error::Error>>;
+    async fn add_card_comment(card_id: ID, text: &str, trello_id: Option<String>) -> Result<CardComment, Box<dyn std::error::Error>>;
 
     async fn get_card_checklists(card_id: ID) -> Result<Vec<CardChecklist>, Box<dyn std::error::Error>>;
-    async fn create_card_checklist(card_id: ID, name: &str) -> Result<CardChecklist, Box<dyn std::error::Error>>;
+    async fn create_card_checklist(card_id: ID, name: &str, trello_id: Option<String>) -> Result<CardChecklist, Box<dyn std::error::Error>>;
     async fn get_checklist_tasks(checklist_id: ID) -> Result<Vec<CardChecklistTask>, Box<dyn std::error::Error>>;
-    async fn create_checklist_task(checklist_id: ID, name: &str) -> Result<CardChecklistTask, Box<dyn std::error::Error>>;
+    async fn create_checklist_task(checklist_id: ID, name: &str, trello_id: Option<String>) -> Result<CardChecklistTask, Box<dyn std::error::Error>>;
     async fn update_checklist_task(card_id: ID, task: &CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>>;
 }
