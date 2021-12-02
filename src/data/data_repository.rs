@@ -97,14 +97,16 @@ impl DataRepository {
         let trello_board_result = TrelloDataStore::create_board(name, None).await;
         match trello_board_result {
             Ok(trello_board) => {
+                let trello_id: String = trello_board._id.trello_id.unwrap();
+                let mongo_board = MongoDataStore::create_board(name, Some(trello_id)).await?;
                 if self.cache_boards.is_some() {
                     self.cache_boards
                         .as_mut()
                         .unwrap()
-                        .push(trello_board.clone());
+                        .push(mongo_board.clone());
                 }
                 self.invalidate_caches(true, true, true, true);
-                Ok(trello_board)
+                Ok(mongo_board)
             }
 
             Err(trello_why) => Err(trello_why),
@@ -206,6 +208,7 @@ impl DataRepository {
         if label_id.is_none() {
             return Err(Box::new(InvalidInputError { message: Some(String::from("Could not find the given label name for the chosen board"))}));
         } else {
+            MongoDataStore::delete_board_label(label_id.clone().unwrap()).await?;
             return TrelloDataStore::delete_board_label(label_id.unwrap()).await;
         }
     }
@@ -243,7 +246,8 @@ impl DataRepository {
         if label_id.is_none() {
             return Err(Box::new(InvalidInputError { message: Some(String::from("Could not find the given label for the chosen board"))}));
         } else {
-            return TrelloDataStore::update_board_label(label_id.unwrap(), name, color).await;
+            TrelloDataStore::update_board_label(label_id.clone().unwrap(), name, color).await?;
+            return MongoDataStore::update_board_label(label_id.unwrap(), name, color).await;
         }
     }
 
@@ -261,7 +265,8 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, false, true);
-        return TrelloDataStore::create_board_label(board_id, name, color, None).await;
+        let trello_label = TrelloDataStore::create_board_label(board_id.clone(), name, color, None).await?;
+        return MongoDataStore::create_board_label(board_id, name, color, trello_label._id.trello_id).await;
     }
 
     pub async fn get_all_board_lists(
@@ -314,7 +319,8 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, true, true);
-        return TrelloDataStore::create_board_list(board_id, name, None).await;
+        let trello_list = TrelloDataStore::create_board_list(board_id.clone(), name, None).await?;
+        return MongoDataStore::create_board_list(board_id, name, trello_list._id.trello_id).await;
     }
 
     pub async fn select_board_list(
@@ -394,7 +400,8 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, true, true, false);
-        TrelloDataStore::create_list_card(list_id, name, None).await
+        let trello_card = TrelloDataStore::create_list_card(list_id.clone(), name, None).await?;
+        return MongoDataStore::create_list_card(list_id, name, trello_card._id.trello_id).await;
     }
 
     pub async fn select_list_card(
@@ -427,7 +434,8 @@ impl DataRepository {
 
     pub async fn update_card(&mut self, card: &Card) -> Result<Card, Box<dyn std::error::Error>> {
         self.invalidate_caches(false, true, false, false);
-        TrelloDataStore::update_card(card).await
+        TrelloDataStore::update_card(card).await?;
+        MongoDataStore::update_card(card).await
     }
 
     pub async fn get_card_comments(&mut self, card: Option<Card>) -> Result<Vec<CardComment>, Box<dyn std::error::Error>> {
@@ -463,7 +471,8 @@ impl DataRepository {
         } else {
             card_id = card.clone().unwrap()._id;
             self.invalidate_caches(true, true, true, true);
-            return TrelloDataStore::add_card_comment(card_id, text, None).await;
+            let trello_comment = TrelloDataStore::add_card_comment(card_id.clone(), text, None).await?;
+            return MongoDataStore::add_card_comment(card_id, text, trello_comment._id.trello_id).await;
         }
     }
 
@@ -514,7 +523,8 @@ impl DataRepository {
             };
         }
         self.invalidate_caches(false, false, true, false);
-        TrelloDataStore::create_card_checklist(card_id, name, None).await
+        let trello_checklist = TrelloDataStore::create_card_checklist(card_id.clone(), name, None).await?;
+        return MongoDataStore::create_card_checklist(card_id, name, trello_checklist._id.trello_id).await;
     }
 
     pub async fn select_card_checklist(&mut self, card: Option<Card>, name: &str) -> Result<Option<CardChecklist>, Box<dyn std::error::Error>> {
@@ -572,7 +582,8 @@ impl DataRepository {
                 self.active_checklist.clone().unwrap()._id
             };
         }
-        TrelloDataStore::create_checklist_task(checklist_id, name, None).await
+        let trello_task = TrelloDataStore::create_checklist_task(checklist_id.clone(), name, None).await?;
+        return MongoDataStore::create_checklist_task(checklist_id, name, trello_task._id.trello_id).await;
     }
 
     pub async fn update_checklist_task(&mut self, card: Option<Card>, task: CardChecklistTask) -> Result<CardChecklistTask, Box<dyn std::error::Error>> {
@@ -588,7 +599,8 @@ impl DataRepository {
                 self.active_card.clone().unwrap()._id
             };
         }
-        TrelloDataStore::update_checklist_task(card_id, &task).await
+        TrelloDataStore::update_checklist_task(card_id.clone(), &task).await?;
+        MongoDataStore::update_checklist_task(card_id, &task).await
     }
 }
 
