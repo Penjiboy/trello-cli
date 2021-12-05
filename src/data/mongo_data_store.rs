@@ -192,6 +192,7 @@ impl MongoDataStore {
             existing_card_by_trello_id.insert(card.clone()._id.trello_id.unwrap(), card);
         }
 
+        // FIXME: There is an issue here whereby the label_ids (and possibly other ids) do not get their local ids from mongo and it remains None
         for mut card in trello_cards {
             let existing_card = existing_card_by_trello_id.get(&card._id.trello_id.clone().unwrap());
             if existing_card.is_some() {

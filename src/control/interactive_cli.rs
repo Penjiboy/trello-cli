@@ -350,7 +350,8 @@ impl InteractiveCli {
                 println!("{}", card_result.result_string.unwrap());
                 if let CommandResultCode::Success = card_result.result_code {
                     self.current_card.replace(card_result.result.unwrap());
-                    let description: String = self.current_card.clone().unwrap().description;
+                    let card: Card = self.current_card.clone().unwrap();
+                    let description: String = card.description;
                     println!("Card Description: \n{}", description);
                 }
             }
@@ -361,7 +362,19 @@ impl InteractiveCli {
                 if let CommandResultCode::Success = cards_result.result_code {
                     println!("Cards:");
                     for card in cards_result.result.unwrap() {
-                        println!("  - {}", card.name);
+                        let labels_result = self.command_exec.get_card_labels(&card).await;
+                        let mut labels: String = String::from("");
+                        match labels_result.result_code {
+                            CommandResultCode::Success => {
+                                for label in labels_result.result.unwrap() {
+                                    labels.push_str(label.name.as_str());
+                                    labels.push_str(", ");
+                                }
+                            },
+
+                            _ => {}
+                        }
+                        println!("  - [{0}] {1}", labels, card.name);
                     }
                 }
 
